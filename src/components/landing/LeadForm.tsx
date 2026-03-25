@@ -10,6 +10,7 @@ const leadSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   whatsapp: z.string().trim().min(10, "WhatsApp inválido").max(20).regex(/^[\d\s()+-]+$/, "Formato inválido"),
   email: z.string().trim().email("E-mail inválido").max(255),
+  employees: z.string().min(1, "Selecione a quantidade de funcionários"),
 });
 
 const LeadForm = () => {
