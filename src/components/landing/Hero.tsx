@@ -22,7 +22,7 @@ const Hero = () => {
               <Button variant="hero" size="lg" className="h-14 px-10 rounded-xl" asChild>
                 <a href="#contato">Quero automatizar meu ponto</a>
               </Button>
-              <Button variant="outline" size="lg" className="h-14 px-8 rounded-xl border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" asChild>
+              <Button variant="outline" size="lg" className="h-14 px-8 rounded-xl border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20 hover:text-primary-foreground" asChild>
                 <a href="#solucao">Como funciona</a>
               </Button>
             </div>
