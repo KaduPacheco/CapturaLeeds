@@ -22,12 +22,12 @@ const Hero = () => {
               <Button variant="hero" size="lg" className="h-14 px-10 rounded-xl" asChild>
                 <a href="#contato">Quero automatizar meu ponto</a>
               </Button>
-              <Button variant="outline" size="lg" className="h-14 px-8 rounded-xl border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" asChild>
+              <Button variant="outline" size="lg" className="h-14 px-8 rounded-xl border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20 hover:text-primary-foreground" asChild>
                 <a href="#solucao">Como funciona</a>
               </Button>
             </div>
             <div className="flex flex-wrap gap-4 text-sm opacity-80">
-              {["Sem cartão de crédito", "Teste grátis por 14 dias", "Suporte humanizado"].map((item) => (
+              {["Sem cartão de crédito", "Teste grátis por 7 dias", "Suporte humanizado"].map((item) => (
                 <span key={item} className="flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-secondary" />
                   {item}
@@ -38,7 +38,7 @@ const Hero = () => {
           <div className="relative">
             <img
               src={heroMockup}
-              alt="Interface do sistema PontoFácil mostrando dashboard de controle de ponto eletrônico"
+              alt="Interface do sistema Ponto Eletrônico mostrando dashboard de controle de ponto eletrônico"
               width={1280}
               height={800}
               className="w-full rounded-2xl shadow-2xl"

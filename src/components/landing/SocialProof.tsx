@@ -5,7 +5,7 @@ const testimonials = [
   {
     name: "Carlos Mendes",
     role: "Dono de restaurante, SP",
-    text: "Antes eu perdia 2 horas por semana conferindo folha de ponto. Agora levo 5 minutos. O PontoFácil mudou minha rotina.",
+    text: "Antes eu perdia 2 horas por semana conferindo folha de ponto. Agora levo 5 minutos. O Ponto Eletrônico mudou minha rotina.",
   },
   {
     name: "Ana Paula Silva",

@@ -37,7 +37,7 @@ const Solution = () => {
             <span className="text-gradient">controlar a jornada</span>
           </h2>
           <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-            O PontoFácil resolve seus problemas de controle de ponto em minutos, não em semanas.
+            O Ponto Eletrônico resolve seus problemas de controle de ponto em minutos, não em semanas.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 gap-8">

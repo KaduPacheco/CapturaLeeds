@@ -9,7 +9,7 @@ const FinalCTA = () => {
           Pare de perder tempo e dinheiro com controle manual
         </h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Junte-se a mais de 500 empresas que já automatizaram o controle de ponto. Comece hoje mesmo — é grátis por 14 dias.
+          Junte-se a mais de 500 empresas que já automatizaram o controle de ponto. Comece hoje mesmo — é grátis por 7 dias.
         </p>
         <Button variant="hero" size="lg" className="h-14 px-10 rounded-xl" asChild>
           <a href="#contato">

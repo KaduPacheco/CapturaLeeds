@@ -6,7 +6,7 @@ const plans = [
   {
     name: "Starter",
     description: "Para micro empresas",
-    price: "49",
+    price: "59,90",
     employees: "Até 5 funcionários",
     features: ["Registro de ponto digital", "Relatórios básicos", "Suporte por e-mail", "App mobile"],
     highlighted: false,
@@ -14,7 +14,7 @@ const plans = [
   {
     name: "Profissional",
     description: "O mais escolhido",
-    price: "99",
+    price: "99,90",
     employees: "Até 20 funcionários",
     features: ["Tudo do Starter", "Horas extras automáticas", "Banco de horas", "Relatórios avançados", "Suporte prioritário"],
     highlighted: true,
@@ -22,7 +22,7 @@ const plans = [
   {
     name: "Empresarial",
     description: "Para equipes maiores",
-    price: "189",
+    price: "189,90",
     employees: "Até 50 funcionários",
     features: ["Tudo do Profissional", "Multi-unidades", "API de integração", "Gerente de conta dedicado", "SLA garantido"],
     highlighted: false,
