@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { CheckCircle, Send } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 import { z } from "zod";
-import { submitLeadToSupabase } from "@/script";
+import { submitLeadToSupabase } from "@/services/leadService";
 
 const leadSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),

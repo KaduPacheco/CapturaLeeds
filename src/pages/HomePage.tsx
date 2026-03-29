@@ -1,0 +1,33 @@
+import Header from "@/components/layout/Header";
+import Hero from "@/components/sections/Hero";
+import Problems from "@/components/sections/Problems";
+import Solution from "@/components/sections/Solution";
+import Benefits from "@/components/sections/Benefits";
+import SocialProof from "@/components/sections/SocialProof";
+import Pricing from "@/components/sections/Pricing";
+import Security from "@/components/sections/Security";
+import LeadForm from "@/components/sections/LeadForm";
+import FinalCTA from "@/components/sections/FinalCTA";
+import Footer from "@/components/layout/Footer";
+
+const HomePage = () => {
+  return (
+    <>
+      <Header />
+      <main>
+        <Hero />
+        <Problems />
+        <Solution />
+        <Benefits />
+        <SocialProof />
+        <Pricing />
+        <Security />
+        <LeadForm />
+        <FinalCTA />
+      </main>
+      <Footer />
+    </>
+  );
+};
+
+export default HomePage;

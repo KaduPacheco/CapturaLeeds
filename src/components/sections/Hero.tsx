@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { CheckCircle } from "lucide-react";
-import heroMockup from "@/assets/hero-mockup.png";
+import heroMockup from "@/assets/images/hero-mockup.png";
 
 const Hero = () => {
   return (

@@ -1,5 +1,5 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Check, Clock, Zap } from "lucide-react";
 
 const features = [
