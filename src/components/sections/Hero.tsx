@@ -13,7 +13,7 @@ const Hero = () => {
               O controle de ponto que o seu <span className="text-secondary">RH sempre pediu</span>
             </h1>
             <p className="text-lg md:text-xl opacity-90 mb-8 leading-relaxed max-w-lg">
-              Sistema de ponto eletrônico corporativo para pequenas e médias empresas. Elimine o uso de planilhas, reduza passivos trabalhistas e feche a folha em minutos.
+              Sistema de ponto eletrônico corporativo para pequenas e médias empresas. Simplifique o uso de planilhas, ajude a reduzir passivos trabalhistas e agilize o fechamento da folha.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Button variant="hero" size="lg" className="h-14 px-10 text-base rounded-lg font-semibold shadow-xl hover:-translate-y-1 transition-all duration-300" asChild>

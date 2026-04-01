@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/Button";
 import { Clock } from "lucide-react";
 
-const Header = () => {
+interface HeaderProps {
+  hideCTA?: boolean;
+}
+
+const Header = ({ hideCTA = false }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b">
       <div className="container flex items-center justify-between h-16">
@@ -17,9 +21,11 @@ const Header = () => {
           <a href="#precos" className="hover:text-foreground transition-colors">Preços</a>
           <a href="#contato" className="hover:text-foreground transition-colors">Contato</a>
         </nav>
-        <Button variant="cta" size="sm" asChild>
-          <a href="#contato">Testar Grátis</a>
-        </Button>
+        {!hideCTA && (
+          <Button variant="cta" size="sm" asChild>
+            <a href="#contato">Testar Grátis</a>
+          </Button>
+        )}
       </div>
     </header>
   );

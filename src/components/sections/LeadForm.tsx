@@ -15,13 +15,14 @@ const leadSchema = z.object({
   employees: z.coerce.number().min(1, "Informe a quantidade de funcionários").int(),
 });
 
-const LeadForm = () => {
+const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { ref, isVisible } = useScrollAnimation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", whatsapp: "", email: "", empresa: "", employees: "" });
+  const [form, setForm] = useState({ name: "", whatsapp: "", email: "", empresa: "", employees: "", bot_field: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const startTime = useState(() => Date.now())[0]; // Bloqueio de envio muito rápido (bot)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +33,13 @@ const LeadForm = () => {
         if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
+      return;
+    }
+    
+    // Proteção contra spam simples (Honeypot e Tempo de preenchimento) -> Pode adicionar ReCaptcha depois
+    if (form.bot_field || Date.now() - startTime < 3000) {
+      toast({ title: "Sua solicitação foi recebida." }); // Falso positivo para o bot
+      if (onSuccess) onSuccess(); else setSubmitted(true);
       return;
     }
     
@@ -47,7 +55,12 @@ const LeadForm = () => {
         funcionarios: result.data.employees
       });
       
-      setSubmitted(true);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        setSubmitted(true);
+      }
+      
       toast({
         title: "Cadastro realizado! 🎉",
         description: "Em breve entraremos em contato com você.",
@@ -93,57 +106,94 @@ const LeadForm = () => {
             style={{ animationDelay: "0.2s" }}
           >
             <div className="space-y-4">
+              <input
+                type="text"
+                name="bot_field"
+                value={form.bot_field}
+                onChange={(e) => setForm({ ...form, bot_field: e.target.value })}
+                className="hidden"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
               <div>
+                <label htmlFor="name" className="sr-only">Nome Completo</label>
                 <Input
+                  id="name"
                   placeholder="Seu nome completo"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="h-12 rounded-xl"
                   maxLength={100}
+                  autoComplete="name"
+                  aria-invalid={!!errors.name}
+                  aria-describedby={errors.name ? "name-error" : undefined}
                 />
-                {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
+                {errors.name && <p id="name-error" className="text-destructive text-xs mt-1">{errors.name}</p>}
               </div>
               <div>
+                <label htmlFor="whatsapp" className="sr-only">WhatsApp</label>
                 <Input
+                  id="whatsapp"
+                  type="tel"
+                  inputMode="tel"
                   placeholder="WhatsApp (ex: 11 99999-9999)"
                   value={form.whatsapp}
                   onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                   className="h-12 rounded-xl"
                   maxLength={20}
+                  autoComplete="tel"
+                  aria-invalid={!!errors.whatsapp}
+                  aria-describedby={errors.whatsapp ? "whatsapp-error" : undefined}
                 />
-                {errors.whatsapp && <p className="text-destructive text-xs mt-1">{errors.whatsapp}</p>}
+                {errors.whatsapp && <p id="whatsapp-error" className="text-destructive text-xs mt-1">{errors.whatsapp}</p>}
               </div>
               <div>
+                <label htmlFor="email" className="sr-only">E-mail corporativo</label>
                 <Input
+                  id="email"
                   type="email"
                   placeholder="Seu melhor e-mail (opcional)"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="h-12 rounded-xl"
                   maxLength={255}
+                  autoComplete="email"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
-                {errors.email && <p className="text-destructive text-xs mt-1">{errors.email}</p>}
+                {errors.email && <p id="email-error" className="text-destructive text-xs mt-1">{errors.email}</p>}
               </div>
               <div>
+                <label htmlFor="empresa" className="sr-only">Nome da Empresa</label>
                 <Input
+                  id="empresa"
                   placeholder="Nome da sua empresa"
                   value={form.empresa}
                   onChange={(e) => setForm({ ...form, empresa: e.target.value })}
                   className="h-12 rounded-xl"
                   maxLength={100}
+                  autoComplete="organization"
+                  aria-invalid={!!errors.empresa}
+                  aria-describedby={errors.empresa ? "empresa-error" : undefined}
                 />
-                {errors.empresa && <p className="text-destructive text-xs mt-1">{errors.empresa}</p>}
+                {errors.empresa && <p id="empresa-error" className="text-destructive text-xs mt-1">{errors.empresa}</p>}
               </div>
               <div>
+                <label htmlFor="employees" className="sr-only">Quantidade de funcionários</label>
                 <Input
+                  id="employees"
                   type="number"
                   placeholder="Quantidade exata de funcionários"
                   value={form.employees}
                   onChange={(e) => setForm({ ...form, employees: e.target.value })}
                   className="h-12 rounded-xl"
                   min="1"
+                  autoComplete="off"
+                  aria-invalid={!!errors.employees}
+                  aria-describedby={errors.employees ? "employees-error" : undefined}
                 />
-                {errors.employees && <p className="text-destructive text-xs mt-1">{errors.employees}</p>}
+                {errors.employees && <p id="employees-error" className="text-destructive text-xs mt-1">{errors.employees}</p>}
               </div>
             </div>
             <Button 
@@ -156,7 +206,8 @@ const LeadForm = () => {
               {isSubmitting ? "Enviando..." : "Quero testar agora"}
             </Button>
             <p className="text-center text-xs text-muted-foreground mt-4">
-              🔒 Seus dados estão seguros. Não enviamos spam.
+              🔒 Seus dados serão usados apenas para contato comercial e demonstração da plataforma. Não enviamos spam. 
+              Ao enviar, você concorda com nossos termos.
             </p>
           </form>
         </div>

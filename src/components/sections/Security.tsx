@@ -4,18 +4,18 @@ import { Lock, FileSignature, DatabaseBackup } from "lucide-react";
 const pillars = [
   {
     icon: FileSignature,
-    title: "Aderência Total ao MTE",
-    description: "Sistema desenvolvido em rigorosa conformidade com a Portaria 671. Geração nativa de arquivos AFD e AFDT.",
+    title: "Voltado à Conformidade com MTE",
+    description: "Sistema desenvolvido com base nas diretrizes da Portaria 671. Facilita a geração de arquivos AFD e AFDT.",
   },
   {
     icon: Lock,
-    title: "Segurança de Nível Bancário",
-    description: "Criptografia ponta a ponta e hospedagem em servidores de alta disponibilidade (AWS). Seus dados inalteráveis e protegidos.",
+    title: "Arquitetura Segura",
+    description: "Criptografia de dados e hospedagem em servidores de alta disponibilidade (AWS). Mais segurança para seus dados.",
   },
   {
     icon: DatabaseBackup,
     title: "Auditoria e Rastreabilidade",
-    description: "Logs completos de auditoria para cada ajuste manual. Backups automáticos diários garantem que nada se perca.",
+    description: "Logs de auditoria para ajustes manuais. Backups automáticos diários ajudam a prevenir perdas de dados.",
   },
 ];
 

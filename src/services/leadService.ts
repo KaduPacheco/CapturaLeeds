@@ -1,7 +1,7 @@
 // Este script isola a lógica de comunicação com o Supabase sem dependência de SDKs pesados.
 
-const SUPABASE_URL = "https://uhnaiubhpoquraxttspi.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVobmFpdWJocG9xdXJheHR0c3BpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NDc4NTAsImV4cCI6MjA5MDAyMzg1MH0.lcOM8-STaTnQBj_k70QFVTuHIlsu4MUFH04Q9uvz98w";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export interface LeadData {
   nome: string;

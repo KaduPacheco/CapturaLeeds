@@ -11,9 +11,14 @@ const Footer = () => {
             </div>
             <span className="font-bold text-foreground">Ponto Eletrônico</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Ponto Eletrônico. Todos os direitos reservados.
-          </p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Política de Privacidade
+            </a>
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Ponto Eletrônico. Todos os direitos reservados.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

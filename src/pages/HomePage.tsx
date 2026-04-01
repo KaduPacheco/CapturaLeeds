@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import Problems from "@/components/sections/Problems";
@@ -9,21 +10,30 @@ import Security from "@/components/sections/Security";
 import LeadForm from "@/components/sections/LeadForm";
 import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/layout/Footer";
+import SuccessView from "@/components/sections/SuccessView";
 
 const HomePage = () => {
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   return (
     <>
-      <Header />
+      <Header hideCTA={isSubmitted} />
       <main>
-        <Hero />
-        <Problems />
-        <Solution />
-        <Benefits />
-        <SocialProof />
-        <Pricing />
-        <Security />
-        <LeadForm />
-        <FinalCTA />
+        {isSubmitted ? (
+          <SuccessView />
+        ) : (
+          <>
+            <Hero />
+            <Problems />
+            <Solution />
+            <Benefits />
+            <SocialProof />
+            <Pricing />
+            <Security />
+            <LeadForm onSuccess={() => setIsSubmitted(true)} />
+            <FinalCTA />
+          </>
+        )}
       </main>
       <Footer />
     </>

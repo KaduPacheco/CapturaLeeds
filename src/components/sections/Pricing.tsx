@@ -21,11 +21,11 @@ const Pricing = () => {
         <div className="text-center mb-14">
           <span className="text-sm font-semibold text-primary uppercase tracking-wider">Preço especial</span>
           <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-2">
-            Invista menos do que o custo de{" "}
-            <span className="text-destructive">um único erro</span>
+            Pode custar menos do que{" "}
+            <span className="text-secondary">um único erro</span>
           </h2>
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-            Um processo trabalhista pode custar milhares de reais. Nosso sistema custa menos que um almoço por dia.
+            Processos trabalhistas podem gerar custos não previstos. Nosso sistema ajuda a mitigar esses riscos por um preço acessível.
           </p>
         </div>
 
@@ -33,11 +33,11 @@ const Pricing = () => {
           <div
             className={`relative rounded-2xl bg-hero-gradient text-primary-foreground shadow-2xl overflow-hidden ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
           >
-            {/* Badge promoção */}
+            {/* Badge especial */}
             <div className="absolute top-0 right-0">
               <div className="bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-bl-xl flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                Promoção por tempo limitado
+                Condição especial
               </div>
             </div>
 
@@ -71,11 +71,11 @@ const Pricing = () => {
                 className="w-full h-14 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                 asChild
               >
-                <a href="#contato">Garantir minha vaga com desconto</a>
+                <a href="#contato">Aproveitar condição especial</a>
               </Button>
 
               <p className="text-center text-xs opacity-70 mt-4">
-                ⚡ Preço promocional válido por tempo limitado. Teste grátis por 7 dias.
+                ⚡ Teste grátis por 7 dias. Planos flexíveis conforme sua necessidade.
               </p>
             </div>
           </div>
