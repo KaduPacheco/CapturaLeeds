@@ -1,22 +1,48 @@
-# Configuração do Administrador Inicial (Supabase Auth)
+# Configuracao de Acesso ao CRM
 
-Como a Etapa 2 implementou a autenticação real, você precisa criar o primeiro usuário para acessar o CRM.
+O CRM autenticado usa Supabase Auth.
 
-## 🚀 Como criar o Admin
+Estado atual:
 
-1. Acesse o [Dashboard do Supabase](https://app.supabase.com/).
-2. Selecione o seu projeto.
-3. No menu lateral esquerdo, clique em **Authentication**.
-4. Clique no botão **Add User** > **Create new user**.
-5. Preencha o **E-mail** e a **Senha**.
-6. (Opcional) Desmarque "Send invitation email" se quiser que o usuário fique ativo imediatamente sem confirmar e-mail.
-7. Clique em **Confirm**.
+- login funcional em `/crm/login`
+- logout funcional
+- qualquer usuario confirmado em `Authentication > Users` consegue acessar o CRM
+- ainda nao existe RBAC por perfil ou organizacao
 
-## 🔐 Acesso ao Sistema
+## Como criar um usuario de acesso
 
-Após criar o usuário, você poderá acessar:
-- **URL**: `http://localhost:5173/crm/login`
-- Use as credenciais que você acabou de criar.
+1. Acesse o projeto no Supabase Dashboard.
+2. Abra `Authentication`.
+3. Clique em `Add User`.
+4. Crie um usuario com e-mail e senha.
+5. Mantenha o usuario confirmado.
 
-## ⚠️ Regras de Segurança
-Nesta etapa, qualquer usuário criado no Supabase Auth terá acesso ao `/crm`. Em etapas futuras, implementaremos **Roles (RBAC)** para restringir o acesso apenas a usuários com flag `admin` no banco de dados.
+Se o fluxo de convite por e-mail estiver ativo, garanta que o usuario termine a confirmacao antes do smoke test.
+
+## Acesso Local
+
+- URL: `http://localhost:5173/crm/login`
+- Credenciais: as mesmas criadas no Supabase Auth
+
+## Escopo Atual de Acesso
+
+No estado atual do projeto:
+
+- `authenticated` pode entrar no CRM
+- `public.leads` aceita `INSERT` de `anon`
+- `public.leads` permite `SELECT` e `UPDATE` para `authenticated`
+- tabelas auxiliares do detalhe do lead usam RLS para `authenticated`
+
+## Validacao Manual Recomendada
+
+- fazer login
+- abrir `/crm/leads`
+- abrir `/crm/leads/:id`
+- criar nota
+- criar tarefa
+- concluir e reabrir tarefa
+- sair do sistema
+
+## Observacao de Seguranca
+
+O acesso ainda nao diferencia admin de usuario comum. A proxima evolucao de seguranca planejada e RBAC/escopo mais restrito, mas isso ainda nao esta implementado.

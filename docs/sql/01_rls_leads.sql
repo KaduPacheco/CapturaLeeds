@@ -1,38 +1,40 @@
--- BLINDAGEM DA TABELA LEADS (ETAPA 1 CRM)
--- Este script deve ser executado no SQL Editor do Supabase para garantir que 
--- o desenvolvimento do CRM não quebre a captura pública da Landing Page.
+-- RLS DOCUMENTADO PARA `public.leads`
+-- Estado atual validado:
+--   - INSERT para anon
+--   - SELECT para authenticated
+--   - UPDATE para authenticated
 
--- 1. Ativar Row Level Security (RLS) na tabela leads
-ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 
--- 2. BLOQUEIO DE SEGURANÇA: Remover permissões públicas de leitura
--- Garante que o role 'anon' (chave pública da LP) não consiga listar leads via API.
--- O Supabase por padrão bloqueia SELECT se não houver policy, mas é boa prática ser explícito.
-DROP POLICY IF EXISTS "Public leads are viewable by everyone" ON leads;
+DROP POLICY IF EXISTS "Public leads are viewable by everyone" ON public.leads;
+DROP POLICY IF EXISTS "Enable insert for anonymous users" ON public.leads;
+DROP POLICY IF EXISTS "Enable all access for authenticated users only" ON public.leads;
+DROP POLICY IF EXISTS "Authenticated users can read leads" ON public.leads;
+DROP POLICY IF EXISTS "Authenticated users can update leads" ON public.leads;
 
--- 3. PERMISSÃO DE CAPTURA: Permitir apenas INSERT para usuários anônimos
--- A Landing Page precisa conseguir inserir leads sem estar logada.
-CREATE POLICY "Enable insert for anonymous users" 
-ON leads FOR INSERT 
-TO anon 
+CREATE POLICY "Enable insert for anonymous users"
+ON public.leads
+FOR INSERT
+TO anon
 WITH CHECK (true);
 
--- 4. PERMISSÃO CRM: Permitir acesso total apenas para usuários autenticados (Admin)
--- Futuramente, os usuários do CRM deverão estar logados para ver os leads.
-CREATE POLICY "Enable all access for authenticated users only" 
-ON leads ALL 
-TO authenticated 
+CREATE POLICY "Authenticated users can read leads"
+ON public.leads
+FOR SELECT
+TO authenticated
+USING (true);
+
+CREATE POLICY "Authenticated users can update leads"
+ON public.leads
+FOR UPDATE
+TO authenticated
 USING (true)
 WITH CHECK (true);
 
--- 5. ESTABILIDADE DE SCHEMA: Garantir retrocompatibilidade
--- Garante que colunas críticas tenham defaults, permitindo que o formulário antigo
--- continue funcionando mesmo sem enviar todos os campos que o CRM possa exigir no futuro.
+ALTER TABLE public.leads ALTER COLUMN origem SET DEFAULT 'landing_page';
+ALTER TABLE public.leads ALTER COLUMN status SET DEFAULT 'novo';
+ALTER TABLE public.leads ALTER COLUMN created_at SET DEFAULT now();
 
--- Garantir que origem e status tenham valores padrão se não forem enviados
-ALTER TABLE leads ALTER COLUMN origem SET DEFAULT 'landing_page';
-ALTER TABLE leads ALTER COLUMN status SET DEFAULT 'novo';
-ALTER TABLE leads ALTER COLUMN created_at SET DEFAULT now();
-
--- 15/05/2024: Qualquer campo NOVO adicionado para o CRM (ex: assigned_to, notes)
--- DEVE ser criado como NULLABLE para não quebrar o INSERT do formulário público.
+-- Guardrail permanente:
+-- qualquer coluna nova do CRM em `public.leads` deve ser nullable ou ter
+-- default seguro para nao quebrar a captura publica.

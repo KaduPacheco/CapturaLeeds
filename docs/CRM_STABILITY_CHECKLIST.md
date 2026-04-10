@@ -1,27 +1,59 @@
-# Checklist de Estabilidade: Landing Page vs. CRM
+# Checklist de Estabilidade: Landing + CRM
 
-Este checklist deve ser consultado antes de cada nova etapa de desenvolvimento do CRM para garantir que a captura pública de leads permaneça funcional.
+Este checklist serve como guardrail para qualquer nova etapa do projeto.
 
-## 🛡️ Regras de Ouro
-1. **NUNCA** mude o nome de colunas existentes na tabela `leads` sem atualizar o `leadService.ts`.
-2. **NUNCA** adicione colunas `NOT NULL` sem um valor `DEFAULT` na tabela `leads`.
-3. **NUNCA** desative a policy de `INSERT` para o role `anon`.
-4. **NUNCA** altere a `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY` sem testar o formulário público imediatamente.
+## Regras de Ouro
 
-## ✅ Teste de Sanidade (Smoke Test)
-Sempre que houver mudanças no banco ou no sistema de autenticação, realize este teste manual:
-- [ ] Acessar a Home (`/`).
-- [ ] Scroll até o formulário de contato.
-- [ ] Preencher com dados de teste.
-- [ ] Clicar em "Quero testar agora".
-- [ ] Verificar se o Toast de sucesso aparece.
-- [ ] Verificar no Dashboard do Supabase se o lead foi criado com `origem = 'landing_page'`.
+1. Nunca quebrar o `INSERT` anonimo da landing em `public.leads`.
+2. Nunca adicionar campo `NOT NULL` em `public.leads` sem `DEFAULT` seguro.
+3. Nunca alterar `LeadForm.tsx` ou `leadService.ts` sem necessidade extrema.
+4. Nunca mudar `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY` sem revalidar a landing imediatamente.
+5. Nunca assumir que uma migration foi aplicada: sempre validar no Supabase e na API.
 
-## 🚨 Sinais de Alerta
-- Erro `401 Unauthorized` ou `403 Forbidden` no console ao enviar o formulário: **RLS bloqueando o role anon.**
-- Erro `400 Bad Request` com mensagem de "property X is missing": **Campo obrigatório adicionado ao banco sem default/not-null.**
-- Erro de CORS no console: **Mudança indevida nas configurações de domínio do Supabase.**
+## Smoke Test Minimo
 
-## 🔄 Procedimento de Rollback
-1. Reverter alterações de SQL no Supabase (Rodar script de remoção de RLS temporário se necessário: `ALTER TABLE leads DISABLE ROW LEVEL SECURITY;`).
-2. Reverter código para o commit estável anterior.
+### Landing publica
+
+- [ ] acessar `/`
+- [ ] enviar lead de teste
+- [ ] confirmar sucesso visual
+- [ ] confirmar lead salvo com `origem = 'landing_page'`
+
+### CRM autenticado
+
+- [ ] login em `/crm/login`
+- [ ] abrir `/crm/leads`
+- [ ] abrir `/crm/leads/:id`
+- [ ] criar nota
+- [ ] criar tarefa
+- [ ] concluir tarefa
+- [ ] reabrir tarefa
+- [ ] verificar timeline
+- [ ] sair do sistema
+
+## Estado Validado Atual
+
+Ja validados manualmente:
+
+- login
+- listagem de leads
+- detalhe do lead
+- notas
+- tarefas
+- timeline
+- logout
+- landing publica isolada
+
+## Sinais de Alerta
+
+- `PGRST205`: tabela nao visivel no schema cache
+- `401` ou `403` no envio publico: RLS da landing quebrado
+- `400` por campo ausente: drift de schema na tabela `leads`
+- data de tarefa exibida em dia errado: risco de timezone em `due_date`
+
+## Rollback Operacional
+
+1. parar a etapa atual
+2. isolar se o problema e landing ou CRM
+3. preservar primeiro a captura publica
+4. reverter apenas a ultima mudanca conhecida e pequena

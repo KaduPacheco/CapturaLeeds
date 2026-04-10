@@ -1,132 +1,161 @@
-# ⏰ Ponto Eletrônico — Landing Page
+# CaptacaoLeeds
 
-Landing page de captação de leads para sistema de ponto eletrônico corporativo voltado a PMEs.
+Aplicacao React com dois contextos isolados:
 
-## 🛠️ Stack Tecnológica
+- landing page publica para captacao de leads
+- CRM autenticado para operacao dos leads captados
+
+O projeto foi evoluido para adicionar o CRM sem quebrar o fluxo publico da landing.
+
+## Estado Atual
+
+### Landing publica
+
+- continua funcionando em `/`
+- continua enviando leads via REST para `public.leads`
+- continua isolada do contexto de autenticacao do CRM
+- nao depende de `supabase-js` para captacao
+
+### CRM autenticado
+
+Rotas implementadas:
+
+- `/crm/login`
+- `/crm`
+- `/crm/leads`
+- `/crm/leads/:id`
+
+Fluxos implementados e validados manualmente:
+
+- login
+- listagem de leads
+- detalhe do lead
+- criacao de nota
+- criacao de tarefa
+- conclusao de tarefa
+- reabertura de tarefa
+- timeline com eventos
+- logout com tratamento de erro
+
+### Supabase
+
+Estrutura aplicada:
+
+- extensao de `public.leads` para compatibilidade com CRM
+- `public.lead_notes`
+- `public.lead_tasks`
+- `public.lead_events`
+
+Politicas atuais de `public.leads`:
+
+- `INSERT` para `anon`
+- `SELECT` para `authenticated`
+- `UPDATE` para `authenticated`
+
+Tabelas auxiliares:
+
+- RLS ativo nas tres tabelas
+- triggers de `updated_at` em `lead_notes` e `lead_tasks`
+
+## Stack
 
 | Tecnologia | Uso |
 |---|---|
-| **React 18** | Biblioteca de UI |
-| **TypeScript** | Tipagem estática |
-| **Vite** | Bundler e dev server |
-| **Tailwind CSS 3** | Estilização utility-first |
-| **shadcn/ui** | Componentes UI (Radix + CVA) |
-| **Zod** | Validação de formulários |
-| **React Router** | Roteamento SPA |
-| **React Query** | Gerenciamento de estado async |
-| **Lucide React** | Ícones |
+| React 18 | UI |
+| TypeScript | Tipagem |
+| Vite | Build e dev server |
+| Tailwind CSS | Estilizacao |
+| React Router | Rotas |
+| React Query | Estado async |
+| Supabase | Auth + banco |
+| Vitest | Testes |
 
-## 📁 Estrutura do Projeto
+## Estrutura Relevante
 
-```
+```text
 src/
-├── main.tsx                      # Entry point da aplicação
-├── App.tsx                       # Root component (providers + rotas)
-│
-├── assets/
-│   └── images/                   # Imagens estáticas (logo, mockups)
-│
-├── components/
-│   ├── layout/                   # Componentes estruturais
-│   │   ├── Header.tsx            # Navbar fixa
-│   │   └── Footer.tsx            # Rodapé
-│   ├── sections/                 # Seções da landing page
-│   │   ├── Hero.tsx              # Banner principal
-│   │   ├── Problems.tsx          # Problemas do público-alvo
-│   │   ├── Solution.tsx          # Funcionalidades do sistema
-│   │   ├── Benefits.tsx          # Benefícios para o cliente
-│   │   ├── SocialProof.tsx       # Depoimentos e métricas
-│   │   ├── Pricing.tsx           # Tabela de preços
-│   │   ├── Security.tsx          # Segurança e conformidade
-│   │   ├── LeadForm.tsx          # Formulário de captação
-│   │   └── FinalCTA.tsx          # Call-to-action final
-│   └── ui/                       # Componentes primitivos (shadcn/ui)
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       ├── Toast.tsx
-│       ├── Toaster.tsx
-│       └── Tooltip.tsx
-│
-├── hooks/
-│   ├── useToast.ts               # Sistema de notificações toast
-│   └── useScrollAnimation.ts     # Animação on-scroll (IntersectionObserver)
-│
-├── services/
-│   └── leadService.ts            # Integração com Supabase e webhook n8n
-│
-├── styles/
-│   └── globals.css               # Design tokens, variáveis CSS e animações
-│
-├── utils/
-│   └── cn.ts                     # Utilitário de merge de classes (clsx + twMerge)
-│
-└── pages/
-    ├── HomePage.tsx               # Página principal (monta todas as seções)
-    └── NotFoundPage.tsx           # Página 404
+  App.tsx
+  pages/
+    HomePage.tsx
+    crm/
+      DashboardPage.tsx
+      LoginPage.tsx
+      LeadsPage.tsx
+      LeadDetailPage.tsx
+  services/
+    leadService.ts
+    crmService.ts
+  contexts/
+    AuthContext.tsx
+  components/
+    auth/
+    layout/
+
+docs/
+  AUTH_SETUP.md
+  CRM_STABILITY_CHECKLIST.md
+  IMPLEMENTATION_STATUS.md
+  LEADS_CRM_COMPATIBILITY.md
+  sql/
+    00_extend_leads_for_crm.sql
+    01_rls_leads.sql
+    05_crm_lead_detail_infra.sql
 ```
 
-## 🚀 Desenvolvimento
+## Desenvolvimento
 
-### Pré-requisitos
+### Pre-requisitos
 
-- Node.js >= 18
-- npm, yarn ou bun
+- Node.js 18+
+- npm
 
-### Instalação
+### Instalar
 
 ```bash
-# Clonar repositório
-git clone https://github.com/KaduPacheco/CapturaLeeds.git
-cd CapturaLeeds
-
-# Instalar dependências
 npm install
 ```
 
-### Executar em desenvolvimento
+### Rodar localmente
 
 ```bash
 npm run dev
 ```
 
-O servidor inicia em `http://localhost:8080`.
+Por padrao, o Vite roda em `http://localhost:5173`.
 
-### Build de produção
+### Build
 
 ```bash
 npm run build
-npm run preview
 ```
 
-### Linting
+### Testes
 
 ```bash
-npm run lint
+npm run test
 ```
 
-## 🔌 Integrações
+## Variaveis de Ambiente
 
-### Supabase
-O formulário de leads envia dados para uma tabela `leads` no Supabase via REST API (sem SDK).
+Exigidas para o estado atual:
 
-### n8n Webhook
-Após salvar no Supabase, os dados são replicados para um webhook n8n para automações (notificações, CRM, etc.). Falhas no webhook não bloqueiam o fluxo principal.
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_N8N_WEBHOOK_URL` opcional
 
-## 📋 Melhorias Futuras
+## Documentacao Operacional
 
-| Melhoria | Descrição |
-|---|---|
-| **Testes unitários** | Adicionar testes com Vitest para componentes e serviços |
-| **Testes E2E** | Cypress ou Playwright para validar fluxo de conversão |
-| **Variáveis de ambiente** | Mover `SUPABASE_URL` e `SUPABASE_ANON_KEY` para `.env` |
-| **SEO avançado** | Adicionar `<link rel="icon">` no `<head>`, structured data (JSON-LD) |
-| **Acessibilidade** | Melhorar labels ARIA, focus management, skip links |
-| **Internacionalização** | Preparar para i18n caso escale para outros idiomas |
-| **Analytics** | Integrar Google Analytics / Plausible para métricas de conversão |
-| **Performance** | Lazy loading de seções abaixo do fold, otimização de imagens (WebP) |
-| **CI/CD** | GitHub Actions para lint, build e deploy automático |
-| **Dark mode** | Ativar toggle de tema (variáveis CSS já preparadas) |
+- [AUTH_SETUP.md](./docs/AUTH_SETUP.md)
+- [CRM_STABILITY_CHECKLIST.md](./docs/CRM_STABILITY_CHECKLIST.md)
+- [IMPLEMENTATION_STATUS.md](./docs/IMPLEMENTATION_STATUS.md)
+- [LEADS_CRM_COMPATIBILITY.md](./docs/LEADS_CRM_COMPATIBILITY.md)
 
-## 📄 Licença
+## Proximas Evolucoes Seguras
 
-Projeto privado — todos os direitos reservados.
+- edicao de `pipeline_stage`
+- observabilidade melhor do audit log de eventos
+- endurecimento futuro de payload/tipagem da timeline
+
+## Licenca
+
+Projeto privado.
