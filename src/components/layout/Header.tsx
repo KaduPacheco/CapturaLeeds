@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/Button";
 import { Clock } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { trackAnalyticsEvent } from "@/services/analyticsService";
 
 interface HeaderProps {
   hideCTA?: boolean;
@@ -7,23 +8,48 @@ interface HeaderProps {
 
 const Header = ({ hideCTA = false }: HeaderProps) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b">
-      <div className="container flex items-center justify-between h-16">
+    <header className="fixed left-0 right-0 top-0 z-50 border-b bg-card/80 backdrop-blur-lg">
+      <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-hero-gradient flex items-center justify-center">
-            <Clock className="w-5 h-5 text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hero-gradient">
+            <Clock className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-bold text-lg text-foreground">Ponto Eletrônico</span>
+          <span className="text-lg font-bold text-foreground">Ponto Eletronico</span>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <a href="#problemas" className="hover:text-foreground transition-colors">Problemas</a>
-          <a href="#solucao" className="hover:text-foreground transition-colors">Solução</a>
-          <a href="#precos" className="hover:text-foreground transition-colors">Preços</a>
-          <a href="#contato" className="hover:text-foreground transition-colors">Contato</a>
+
+        <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+          <a href="#problemas" className="transition-colors hover:text-foreground">
+            Problemas
+          </a>
+          <a href="#solucao" className="transition-colors hover:text-foreground">
+            Solucao
+          </a>
+          <a href="#precos" className="transition-colors hover:text-foreground">
+            Precos
+          </a>
+          <a href="#contato" className="transition-colors hover:text-foreground">
+            Contato
+          </a>
         </nav>
+
         {!hideCTA && (
           <Button variant="cta" size="sm" asChild>
-            <a href="#contato">Testar Grátis</a>
+            <a
+              href="#contato"
+              onClick={() =>
+                trackAnalyticsEvent({
+                  eventName: "cta_click",
+                  payload: {
+                    cta_id: "header_primary_cta",
+                    cta_label: "testar_gratis",
+                    cta_location: "header",
+                    cta_target: "#contato",
+                  },
+                })
+              }
+            >
+              Testar gratis
+            </a>
           </Button>
         )}
       </div>

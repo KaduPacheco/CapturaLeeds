@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import Problems from "@/components/sections/Problems";
@@ -11,9 +11,15 @@ import LeadForm from "@/components/sections/LeadForm";
 import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/layout/Footer";
 import SuccessView from "@/components/sections/SuccessView";
+import { flushAnalyticsQueue, trackPageView } from "@/services/analyticsService";
 
 const HomePage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    trackPageView({ page_name: "landing_home" });
+    void flushAnalyticsQueue();
+  }, []);
 
   return (
     <>

@@ -7,6 +7,7 @@ interface KpiCardProps {
   icon: LucideIcon;
   isLoading?: boolean;
   errorMessage?: string;
+  isUnavailable?: boolean;
 }
 
 const toneStyles: Record<DashboardKpi["tone"], string> = {
@@ -23,7 +24,7 @@ const helperToneStyles: Record<DashboardKpi["tone"], string> = {
   danger: "text-destructive",
 };
 
-const KpiCard = ({ metric, icon: Icon, isLoading, errorMessage }: KpiCardProps) => {
+const KpiCard = ({ metric, icon: Icon, isLoading, errorMessage, isUnavailable }: KpiCardProps) => {
   if (isLoading) {
     return (
       <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.45)]">
@@ -41,6 +42,22 @@ const KpiCard = ({ metric, icon: Icon, isLoading, errorMessage }: KpiCardProps) 
   }
 
   if (errorMessage || !metric) {
+    if (isUnavailable) {
+      return (
+        <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 shadow-[0_20px_60px_-40px_rgba(37,99,235,0.28)]">
+          <div className="mb-4 inline-flex rounded-2xl bg-primary/10 p-3 text-primary">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Analytics aguardando habilitacao</p>
+            <p className="text-sm text-muted-foreground">
+              {errorMessage || "A infraestrutura de analytics ainda nao esta disponivel neste ambiente."}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-6 shadow-[0_20px_60px_-40px_rgba(220,38,38,0.35)]">
         <div className="mb-4 inline-flex rounded-2xl bg-destructive/10 p-3 text-destructive">
@@ -66,7 +83,9 @@ const KpiCard = ({ metric, icon: Icon, isLoading, errorMessage }: KpiCardProps) 
         </div>
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
-          <p className="text-4xl font-semibold tracking-tight text-foreground">{metric.value}</p>
+          <p className="text-4xl font-semibold tracking-tight text-foreground">
+            {metric.valueDisplay ?? metric.value}
+          </p>
           <p className="text-sm leading-6 text-muted-foreground">{metric.description}</p>
         </div>
       </div>

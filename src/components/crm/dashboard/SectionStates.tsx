@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { AlertTriangle, Inbox } from "lucide-react";
+import { AlertTriangle, Inbox, Info } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 interface SectionMessageProps {
@@ -45,6 +45,28 @@ export const SectionEmptyState = ({
       )}
     >
       <div className="rounded-full bg-background p-3 text-muted-foreground shadow-sm">{icon}</div>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+};
+
+export const SectionInfoState = ({
+  title,
+  description,
+  icon = <Info className="h-5 w-5" />,
+  className,
+}: SectionMessageProps) => {
+  return (
+    <div
+      className={cn(
+        "flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-10 text-center",
+        className,
+      )}
+    >
+      <div className="rounded-full bg-primary/10 p-3 text-primary">{icon}</div>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
