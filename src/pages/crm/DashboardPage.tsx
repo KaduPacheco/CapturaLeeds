@@ -14,6 +14,7 @@ import {
 import AttentionPanel from "@/components/crm/dashboard/AttentionPanel";
 import ActivityFeed from "@/components/crm/dashboard/ActivityFeed";
 import AcquisitionFunnelCard from "@/components/crm/dashboard/AcquisitionFunnelCard";
+import AnalyticsStatusPanel from "@/components/crm/dashboard/AnalyticsStatusPanel";
 import AttributionSourcesTable from "@/components/crm/dashboard/AttributionSourcesTable";
 import CampaignRankingTable from "@/components/crm/dashboard/CampaignRankingTable";
 import KpiCard from "@/components/crm/dashboard/KpiCard";
@@ -81,6 +82,17 @@ const DashboardPage = () => {
   const analyticsErrorMessage = analyticsQuery.isError ? getErrorMessage(analyticsQuery.error) : undefined;
   const analyticsUnavailable = isAnalyticsUnavailableErrorMessage(analyticsErrorMessage);
   const hasOperationalErrors = leadsQuery.isError || tasksQuery.isError || eventsQuery.isError;
+  const analyticsUiState = analyticsQuery.isLoading
+    ? "loading"
+    : analyticsUnavailable
+      ? "unavailable"
+      : analyticsQuery.isError
+        ? "error"
+        : (analyticsQuery.data?.length ?? 0) === 0
+          ? "empty"
+          : "ready";
+  const showAnalyticsStatusPanel = analyticsUiState !== "loading" && analyticsUiState !== "ready";
+  const showAnalyticsModules = analyticsUiState === "loading" || analyticsUiState === "ready";
 
   const leadMetrics = useMemo(
     () => (leadsQuery.data ? buildLeadKpis(leadsQuery.data, period) : []),
@@ -167,7 +179,9 @@ const DashboardPage = () => {
                 {hasOperationalErrors
                   ? "Algumas secoes exigem revisao"
                   : analyticsUnavailable
-                    ? "CRM operacional ativo - analytics pendente"
+                    ? "CRM operacional ativo"
+                    : analyticsUiState === "empty"
+                      ? "Analytics ativo, aguardando volume"
                     : analyticsQuery.isError
                       ? "Analytics exige revisao"
                       : "Dashboard sincronizado"}
@@ -176,7 +190,9 @@ const DashboardPage = () => {
                 {hasOperationalErrors
                   ? "Leads, tarefas ou atividade recente precisam de revisao."
                   : analyticsUnavailable
-                    ? `Aplicar ${ANALYTICS_MIGRATION_FILE} habilita visitantes, conversao e evolucao por periodo.`
+                    ? `A operacao segue disponivel. ${ANALYTICS_MIGRATION_FILE} continua como referencia tecnica deste contrato.`
+                    : analyticsUiState === "empty"
+                      ? "A estrutura de analytics esta habilitada, mas a janela selecionada ainda nao acumulou eventos suficientes."
                     : lastUpdatedAt
                       ? `Ultima atualizacao em ${formatDateTime(lastUpdatedAt)}`
                       : "Sincronizando dados do CRM"}
@@ -218,69 +234,82 @@ const DashboardPage = () => {
           isLoading={tasksQuery.isLoading}
           errorMessage={tasksQuery.isError ? getErrorMessage(tasksQuery.error) : undefined}
         />
-        <KpiCard
-          metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "period_visitors")}
-          icon={Globe}
-          isLoading={analyticsQuery.isLoading}
-          errorMessage={analyticsErrorMessage}
-          isUnavailable={analyticsUnavailable}
-        />
-        <KpiCard
-          metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "conversion_rate")}
-          icon={Percent}
-          isLoading={analyticsQuery.isLoading}
-          errorMessage={analyticsErrorMessage}
-          isUnavailable={analyticsUnavailable}
-        />
+        {showAnalyticsModules ? (
+          <>
+            <KpiCard
+              metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "period_visitors")}
+              icon={Globe}
+              isLoading={analyticsQuery.isLoading}
+              errorMessage={analyticsErrorMessage}
+              isUnavailable={analyticsUnavailable}
+            />
+            <KpiCard
+              metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "conversion_rate")}
+              icon={Percent}
+              isLoading={analyticsQuery.isLoading}
+              errorMessage={analyticsErrorMessage}
+              isUnavailable={analyticsUnavailable}
+            />
+          </>
+        ) : null}
       </section>
 
-      <PeriodPerformanceChart
-        data={analyticsSnapshot?.performance}
-        isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
-        errorMessage={
-          analyticsQuery.isError
-            ? analyticsErrorMessage
-            : leadsQuery.isError
-              ? getErrorMessage(leadsQuery.error)
-              : undefined
-        }
-        isUnavailable={analyticsUnavailable}
-      />
-
-      <TrafficLeadComparisonCard
-        data={analyticsSnapshot?.trafficLeadComparison}
-        isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
-        errorMessage={
-          analyticsQuery.isError
-            ? analyticsErrorMessage
-            : leadsQuery.isError
-              ? getErrorMessage(leadsQuery.error)
-              : undefined
-        }
-        isUnavailable={analyticsUnavailable}
-      />
-
-      <AcquisitionFunnelCard
-        data={analyticsSnapshot?.funnel}
-        isLoading={analyticsQuery.isLoading}
-        errorMessage={analyticsErrorMessage}
-        isUnavailable={analyticsUnavailable}
-      />
-
-      <section className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
-        <AttributionSourcesTable
-          data={analyticsSnapshot?.attributionSources}
-          isLoading={analyticsQuery.isLoading}
-          errorMessage={analyticsErrorMessage}
-          isUnavailable={analyticsUnavailable}
+      {showAnalyticsStatusPanel ? (
+        <AnalyticsStatusPanel
+          state={analyticsUiState}
+          message={analyticsUiState === "error" ? analyticsErrorMessage : undefined}
         />
-        <CampaignRankingTable
-          data={analyticsSnapshot?.campaigns}
-          isLoading={analyticsQuery.isLoading}
-          errorMessage={analyticsErrorMessage}
-          isUnavailable={analyticsUnavailable}
-        />
-      </section>
+      ) : (
+        <>
+          <PeriodPerformanceChart
+            data={analyticsSnapshot?.performance}
+            isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
+            errorMessage={
+              analyticsQuery.isError
+                ? analyticsErrorMessage
+                : leadsQuery.isError
+                  ? getErrorMessage(leadsQuery.error)
+                  : undefined
+            }
+            isUnavailable={analyticsUnavailable}
+          />
+
+          <TrafficLeadComparisonCard
+            data={analyticsSnapshot?.trafficLeadComparison}
+            isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
+            errorMessage={
+              analyticsQuery.isError
+                ? analyticsErrorMessage
+                : leadsQuery.isError
+                  ? getErrorMessage(leadsQuery.error)
+                  : undefined
+            }
+            isUnavailable={analyticsUnavailable}
+          />
+
+          <AcquisitionFunnelCard
+            data={analyticsSnapshot?.funnel}
+            isLoading={analyticsQuery.isLoading}
+            errorMessage={analyticsErrorMessage}
+            isUnavailable={analyticsUnavailable}
+          />
+
+          <section className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
+            <AttributionSourcesTable
+              data={analyticsSnapshot?.attributionSources}
+              isLoading={analyticsQuery.isLoading}
+              errorMessage={analyticsErrorMessage}
+              isUnavailable={analyticsUnavailable}
+            />
+            <CampaignRankingTable
+              data={analyticsSnapshot?.campaigns}
+              isLoading={analyticsQuery.isLoading}
+              errorMessage={analyticsErrorMessage}
+              isUnavailable={analyticsUnavailable}
+            />
+          </section>
+        </>
+      )}
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr,0.85fr]">
         <PipelineChart
