@@ -13,8 +13,8 @@ interface SourceChartProps {
 const SourceChart = ({ data, isLoading, errorMessage }: SourceChartProps) => {
   return (
     <DashboardSection
-      title="Distribuicao por origem"
-      subtitle="Canais de entrada que mais alimentam a operacao comercial."
+      title="Origem operacional do lead"
+      subtitle="Campo origem salvo no CRM. Pode diferir da origem analitica por UTM e referrer."
     >
       {isLoading ? (
         <div className="grid gap-6 md:grid-cols-[220px,1fr] md:items-center">

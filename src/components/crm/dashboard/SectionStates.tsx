@@ -75,6 +75,29 @@ export const SectionInfoState = ({
   );
 };
 
+interface AnalyticsUnavailableStateProps {
+  description: string;
+  icon?: ReactNode;
+  className?: string;
+  title?: string;
+}
+
+export const AnalyticsUnavailableState = ({
+  description,
+  icon,
+  className,
+  title = "Analytics aguardando habilitacao",
+}: AnalyticsUnavailableStateProps) => {
+  return (
+    <SectionInfoState
+      title={title}
+      description={description}
+      icon={icon}
+      className={className}
+    />
+  );
+};
+
 interface SectionSkeletonProps {
   className?: string;
   rows?: number;
