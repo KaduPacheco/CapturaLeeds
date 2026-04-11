@@ -13,21 +13,24 @@ import {
 } from "lucide-react";
 import AttentionPanel from "@/components/crm/dashboard/AttentionPanel";
 import ActivityFeed from "@/components/crm/dashboard/ActivityFeed";
+import AcquisitionFunnelCard from "@/components/crm/dashboard/AcquisitionFunnelCard";
+import AttributionSourcesTable from "@/components/crm/dashboard/AttributionSourcesTable";
+import CampaignRankingTable from "@/components/crm/dashboard/CampaignRankingTable";
 import KpiCard from "@/components/crm/dashboard/KpiCard";
 import PeriodPerformanceChart from "@/components/crm/dashboard/PeriodPerformanceChart";
 import PipelineChart from "@/components/crm/dashboard/PipelineChart";
 import RecentLeadsList from "@/components/crm/dashboard/RecentLeadsList";
 import SourceChart from "@/components/crm/dashboard/SourceChart";
+import TrafficLeadComparisonCard from "@/components/crm/dashboard/TrafficLeadComparisonCard";
 import UpcomingTasksList from "@/components/crm/dashboard/UpcomingTasksList";
 import { Button } from "@/components/ui/Button";
 import {
   ANALYTICS_MIGRATION_FILE,
   DASHBOARD_PERIOD_OPTIONS,
   buildActivityFeed,
-  buildAnalyticsKpis,
+  buildAnalyticsDashboardSnapshot,
   buildAttentionPanel,
   buildLeadKpis,
-  buildPerformanceSeries,
   buildPipelineDistribution,
   buildRecentLeads,
   buildSourceDistribution,
@@ -84,16 +87,14 @@ const DashboardPage = () => {
     [leadsQuery.data, period],
   );
   const taskMetrics = useMemo(() => (tasksQuery.data ? buildTaskKpis(tasksQuery.data) : []), [tasksQuery.data]);
-  const analyticsMetrics = useMemo(
-    () => (analyticsQuery.data ? buildAnalyticsKpis(analyticsQuery.data, period) : []),
-    [analyticsQuery.data, period],
-  );
 
   const pipelineData = useMemo(() => (leadsQuery.data ? buildPipelineDistribution(leadsQuery.data) : []), [leadsQuery.data]);
   const sourceData = useMemo(() => (leadsQuery.data ? buildSourceDistribution(leadsQuery.data) : []), [leadsQuery.data]);
-  const performanceData = useMemo(
+  const analyticsSnapshot = useMemo(
     () =>
-      leadsQuery.data && analyticsQuery.data ? buildPerformanceSeries(analyticsQuery.data, leadsQuery.data, period) : [],
+      leadsQuery.data && analyticsQuery.data
+        ? buildAnalyticsDashboardSnapshot(analyticsQuery.data, leadsQuery.data, period)
+        : undefined,
     [analyticsQuery.data, leadsQuery.data, period],
   );
   const recentLeads = useMemo(() => (leadsQuery.data ? buildRecentLeads(leadsQuery.data) : []), [leadsQuery.data]);
@@ -166,7 +167,7 @@ const DashboardPage = () => {
                 {hasOperationalErrors
                   ? "Algumas secoes exigem revisao"
                   : analyticsUnavailable
-                    ? "CRM operacional ativo · analytics pendente"
+                    ? "CRM operacional ativo - analytics pendente"
                     : analyticsQuery.isError
                       ? "Analytics exige revisao"
                       : "Dashboard sincronizado"}
@@ -218,14 +219,14 @@ const DashboardPage = () => {
           errorMessage={tasksQuery.isError ? getErrorMessage(tasksQuery.error) : undefined}
         />
         <KpiCard
-          metric={analyticsMetrics.find((metric) => metric.id === "period_visitors")}
+          metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "period_visitors")}
           icon={Globe}
           isLoading={analyticsQuery.isLoading}
           errorMessage={analyticsErrorMessage}
           isUnavailable={analyticsUnavailable}
         />
         <KpiCard
-          metric={analyticsMetrics.find((metric) => metric.id === "conversion_rate")}
+          metric={analyticsSnapshot?.kpis.find((metric) => metric.id === "conversion_rate")}
           icon={Percent}
           isLoading={analyticsQuery.isLoading}
           errorMessage={analyticsErrorMessage}
@@ -234,7 +235,7 @@ const DashboardPage = () => {
       </section>
 
       <PeriodPerformanceChart
-        data={performanceData}
+        data={analyticsSnapshot?.performance}
         isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
         errorMessage={
           analyticsQuery.isError
@@ -245,6 +246,41 @@ const DashboardPage = () => {
         }
         isUnavailable={analyticsUnavailable}
       />
+
+      <TrafficLeadComparisonCard
+        data={analyticsSnapshot?.trafficLeadComparison}
+        isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
+        errorMessage={
+          analyticsQuery.isError
+            ? analyticsErrorMessage
+            : leadsQuery.isError
+              ? getErrorMessage(leadsQuery.error)
+              : undefined
+        }
+        isUnavailable={analyticsUnavailable}
+      />
+
+      <AcquisitionFunnelCard
+        data={analyticsSnapshot?.funnel}
+        isLoading={analyticsQuery.isLoading}
+        errorMessage={analyticsErrorMessage}
+        isUnavailable={analyticsUnavailable}
+      />
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
+        <AttributionSourcesTable
+          data={analyticsSnapshot?.attributionSources}
+          isLoading={analyticsQuery.isLoading}
+          errorMessage={analyticsErrorMessage}
+          isUnavailable={analyticsUnavailable}
+        />
+        <CampaignRankingTable
+          data={analyticsSnapshot?.campaigns}
+          isLoading={analyticsQuery.isLoading}
+          errorMessage={analyticsErrorMessage}
+          isUnavailable={analyticsUnavailable}
+        />
+      </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr,0.85fr]">
         <PipelineChart

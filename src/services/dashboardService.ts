@@ -2,14 +2,22 @@ import { assertSupabaseConfigured, supabase } from "@/lib/supabase";
 import { AnalyticsEventName, AnalyticsEventRecord } from "@/types/analytics";
 import { CrmLead, CrmLeadEvent, CrmLeadTask } from "@/types/crm";
 import {
+  DashboardAcquisitionFunnel,
   DashboardActivityItem,
+  DashboardAnalyticsSnapshot,
   DashboardAttentionData,
+  DashboardAttributionModel,
+  DashboardAttributionSourceRow,
+  DashboardCampaignRow,
+  DashboardCampaignSortMode,
   DashboardChartDatum,
   DashboardKpi,
   DashboardPeriodOption,
   DashboardPeriodPoint,
   DashboardPeriodValue,
   DashboardRecentLeadItem,
+  DashboardTrafficLeadComparison,
+  DashboardTrafficLeadInsight,
   DashboardUpcomingTaskItem,
 } from "@/types/dashboard";
 
@@ -40,10 +48,13 @@ type DashboardAnalyticsRecord = Pick<
   | "visitor_id"
   | "session_id"
   | "page_path"
+  | "page_url"
   | "referrer"
   | "utm_source"
   | "utm_medium"
   | "utm_campaign"
+  | "utm_term"
+  | "utm_content"
   | "occurred_at"
 >;
 
@@ -59,13 +70,26 @@ const PIPELINE_COLORS: Record<string, string> = {
 const SOURCE_COLORS = ["#2563eb", "#0f766e", "#7c3aed", "#ea580c", "#dc2626", "#0891b2", "#64748b"];
 const PIPELINE_ORDER = ["novo", "em_contato", "qualificado", "ganho", "perdido", "sem_estagio"];
 const ANALYTICS_CONVERSION_EVENT: AnalyticsEventName = "lead_form_submit_success";
+const ANALYTICS_DASHBOARD_EVENT_NAMES: AnalyticsEventName[] = [
+  "page_view",
+  "cta_click",
+  "lead_form_start",
+  "lead_form_submit_attempt",
+  ANALYTICS_CONVERSION_EVENT,
+  "lead_form_submit_error",
+];
 export const ANALYTICS_MIGRATION_FILE = "05_analytics_events.sql";
 
 export const DASHBOARD_PERIOD_OPTIONS: DashboardPeriodOption[] = [
+  { value: "today", label: "Hoje", days: 1 },
   { value: "7d", label: "7 dias", days: 7 },
   { value: "30d", label: "30 dias", days: 30 },
   { value: "90d", label: "90 dias", days: 90 },
 ];
+
+interface DashboardAggregationOptions {
+  now?: Date;
+}
 
 export async function getDashboardLeadsDataset(): Promise<DashboardLeadRecord[]> {
   assertSupabaseConfigured();
@@ -116,12 +140,13 @@ export async function getDashboardEventsDataset(limit = 10): Promise<DashboardEv
 export async function getDashboardAnalyticsDataset(period: DashboardPeriodValue): Promise<DashboardAnalyticsRecord[]> {
   assertSupabaseConfigured();
 
-  const periodOption = getDashboardPeriodOption(period);
+  const periodRange = getPeriodRange(period);
   const { data, error } = await supabase
     .from("analytics_events")
-    .select("event_name,visitor_id,session_id,page_path,referrer,utm_source,utm_medium,utm_campaign,occurred_at")
-    .gte("occurred_at", getPeriodStartDate(periodOption.days).toISOString())
-    .in("event_name", ["page_view", ANALYTICS_CONVERSION_EVENT])
+    .select("event_name,visitor_id,session_id,page_path,page_url,referrer,utm_source,utm_medium,utm_campaign,utm_term,utm_content,occurred_at")
+    .gte("occurred_at", periodRange.start.toISOString())
+    .lt("occurred_at", periodRange.endExclusive.toISOString())
+    .in("event_name", ANALYTICS_DASHBOARD_EVENT_NAMES)
     .order("occurred_at", { ascending: true });
 
   if (error) {
@@ -148,10 +173,14 @@ export function isAnalyticsUnavailableErrorMessage(message?: string | null) {
   );
 }
 
-export function buildLeadKpis(leads: DashboardLeadRecord[], period: DashboardPeriodValue): DashboardKpi[] {
+export function buildLeadKpis(
+  leads: DashboardLeadRecord[],
+  period: DashboardPeriodValue,
+  options?: DashboardAggregationOptions,
+): DashboardKpi[] {
   const periodOption = getDashboardPeriodOption(period);
-  const periodStart = getPeriodStartDate(periodOption.days).getTime();
-  const newLeads = leads.filter((lead) => new Date(lead.created_at).getTime() >= periodStart).length;
+  const periodRange = getPeriodRange(period, options);
+  const newLeads = leads.filter((lead) => isWithinPeriod(lead.created_at, periodRange)).length;
 
   return [
     {
@@ -164,7 +193,7 @@ export function buildLeadKpis(leads: DashboardLeadRecord[], period: DashboardPer
     },
     {
       id: "new_leads",
-      label: `Novos em ${periodOption.label}`,
+      label: period === "today" ? "Novos hoje" : `Novos em ${periodOption.label}`,
       value: newLeads,
       description: "Entradas recentes capturadas no periodo selecionado.",
       helperText: "Ritmo de aquisicao comercial.",
@@ -212,7 +241,7 @@ export function buildAnalyticsKpis(
   return [
     {
       id: "period_visitors",
-      label: `Visitantes em ${periodOption.label}`,
+      label: period === "today" ? "Visitantes hoje" : `Visitantes em ${periodOption.label}`,
       value: uniqueVisitors,
       description: "Visitantes unicos medidos por visitor_id no periodo selecionado.",
       helperText: `${pageViews.length} page views registradas`,
@@ -283,9 +312,9 @@ export function buildPerformanceSeries(
   analyticsEvents: DashboardAnalyticsRecord[],
   leads: DashboardLeadRecord[],
   period: DashboardPeriodValue,
+  options?: DashboardAggregationOptions,
 ): DashboardPeriodPoint[] {
-  const periodOption = getDashboardPeriodOption(period);
-  const buckets = createPeriodBuckets(periodOption.days);
+  const buckets = createPeriodBuckets(period, options);
   const pageViews = analyticsEvents.filter((event) => event.event_name === "page_view");
   const successes = analyticsEvents.filter((event) => event.event_name === ANALYTICS_CONVERSION_EVENT);
 
@@ -325,6 +354,352 @@ export function buildPerformanceSeries(
       conversionRate: visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(1)) : 0,
     };
   });
+}
+
+export function buildAttributionSourceRows(
+  analyticsEvents: DashboardAnalyticsRecord[],
+  limit = 8,
+): DashboardAttributionSourceRow[] {
+  const sourceMap = new Map<
+    string,
+    {
+      sourceKey: string;
+      sourceLabel: string;
+      attributionModel: DashboardAttributionModel;
+      detailLabel: string;
+      visitorIds: Set<string>;
+      conversionVisitorIds: Set<string>;
+    }
+  >();
+
+  const pageViews = analyticsEvents.filter((event) => event.event_name === "page_view");
+  const successes = analyticsEvents.filter((event) => event.event_name === ANALYTICS_CONVERSION_EVENT);
+  const totalVisitors = new Set(pageViews.map((event) => event.visitor_id)).size;
+  const totalConversions = new Set(successes.map((event) => event.visitor_id)).size;
+
+  pageViews.forEach((event) => {
+    const attribution = getNormalizedAttribution(event);
+    const entry = getOrCreateSourceAggregate(sourceMap, attribution);
+    entry.visitorIds.add(event.visitor_id);
+  });
+
+  successes.forEach((event) => {
+    const attribution = getNormalizedAttribution(event);
+    const entry = getOrCreateSourceAggregate(sourceMap, attribution);
+    entry.conversionVisitorIds.add(event.visitor_id);
+  });
+
+  return Array.from(sourceMap.values())
+    .map((entry) => {
+      const visitors = entry.visitorIds.size;
+      const conversions = entry.conversionVisitorIds.size;
+
+      return {
+        id: entry.sourceKey,
+        sourceKey: entry.sourceKey,
+        sourceLabel: entry.sourceLabel,
+        attributionModel: entry.attributionModel,
+        detailLabel: entry.detailLabel,
+        visitors,
+        conversions,
+        conversionRate: visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(1)) : null,
+        visitorsShare: totalVisitors > 0 ? Number(((visitors / totalVisitors) * 100).toFixed(1)) : 0,
+        conversionsShare: totalConversions > 0 ? Number(((conversions / totalConversions) * 100).toFixed(1)) : 0,
+      };
+    })
+    .sort(sortAttributionRows)
+    .slice(0, limit);
+}
+
+export function buildCampaignRanking(
+  analyticsEvents: DashboardAnalyticsRecord[],
+  limit = 8,
+): DashboardCampaignRow[] {
+  const campaignMap = new Map<
+    string,
+    {
+      campaignLabel: string;
+      sourceLabel: string;
+      mediumLabel: string;
+      termLabel: string | null;
+      contentLabel: string | null;
+      attributionStatus: DashboardCampaignRow["attributionStatus"];
+      attributionSummary: string;
+      visitorIds: Set<string>;
+      conversionVisitorIds: Set<string>;
+    }
+  >();
+
+  const campaignEvents = analyticsEvents.filter(isCampaignRelevantEvent);
+
+  campaignEvents.forEach((event) => {
+    const source = getNormalizedAttribution(event);
+    const campaign = getCampaignMetadata(event, source);
+    const existing =
+      campaignMap.get(campaign.id) ??
+      {
+        campaignLabel: campaign.campaignLabel,
+        sourceLabel: campaign.sourceLabel,
+        mediumLabel: campaign.mediumLabel,
+        termLabel: campaign.termLabel,
+        contentLabel: campaign.contentLabel,
+        attributionStatus: campaign.attributionStatus,
+        attributionSummary: campaign.attributionSummary,
+        visitorIds: new Set<string>(),
+        conversionVisitorIds: new Set<string>(),
+      };
+
+    if (event.event_name === "page_view") {
+      existing.visitorIds.add(event.visitor_id);
+    }
+
+    if (event.event_name === ANALYTICS_CONVERSION_EVENT) {
+      existing.conversionVisitorIds.add(event.visitor_id);
+    }
+
+    if (existing.termLabel && campaign.termLabel && existing.termLabel !== campaign.termLabel) {
+      existing.termLabel = "Multiplos termos";
+    } else if (!existing.termLabel) {
+      existing.termLabel = campaign.termLabel;
+    }
+
+    if (existing.contentLabel && campaign.contentLabel && existing.contentLabel !== campaign.contentLabel) {
+      existing.contentLabel = "Multiplos conteudos";
+    } else if (!existing.contentLabel) {
+      existing.contentLabel = campaign.contentLabel;
+    }
+
+    if (existing.attributionStatus !== "untagged" && campaign.attributionStatus === "untagged") {
+      existing.attributionStatus = "partial";
+      existing.attributionSummary = "Dados mistos de campanha e trafego sem UTM";
+    } else if (existing.attributionStatus === "complete" && campaign.attributionStatus === "partial") {
+      existing.attributionStatus = "partial";
+      existing.attributionSummary = campaign.attributionSummary;
+    }
+
+    campaignMap.set(campaign.id, existing);
+  });
+
+  return Array.from(campaignMap.entries())
+    .map(([id, entry]) => {
+      const visitors = entry.visitorIds.size;
+      const conversions = entry.conversionVisitorIds.size;
+
+      return {
+        id,
+        campaignLabel: entry.campaignLabel,
+        sourceLabel: entry.sourceLabel,
+        mediumLabel: entry.mediumLabel,
+        termLabel: entry.termLabel,
+        contentLabel: entry.contentLabel,
+        visitors,
+        conversions,
+        conversionRate: visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(1)) : null,
+        attributionStatus: entry.attributionStatus,
+        attributionSummary: entry.attributionSummary,
+      };
+    })
+    .sort((left, right) => sortCampaignRows(left, right, "highest_conversion"))
+    .slice(0, limit);
+}
+
+export function sortCampaignRanking(
+  campaigns: DashboardCampaignRow[],
+  sortMode: DashboardCampaignSortMode,
+) {
+  return [...campaigns].sort((left, right) => sortCampaignRows(left, right, sortMode));
+}
+
+export function buildAcquisitionFunnel(analyticsEvents: DashboardAnalyticsRecord[]): DashboardAcquisitionFunnel {
+  const funnelDefinitions = [
+    {
+      id: "visitors" as const,
+      label: "Visitantes",
+      description: "Visitantes unicos com page_view no periodo.",
+      eventName: "page_view" as AnalyticsEventName,
+    },
+    {
+      id: "cta_clicks" as const,
+      label: "Cliques em CTA",
+      description: "Visitantes que clicaram em pelo menos um CTA da landing.",
+      eventName: "cta_click" as AnalyticsEventName,
+    },
+    {
+      id: "form_starts" as const,
+      label: "Inicio de formulario",
+      description: "Visitantes que interagiram com o formulario pela primeira vez.",
+      eventName: "lead_form_start" as AnalyticsEventName,
+    },
+    {
+      id: "submit_attempts" as const,
+      label: "Tentativa de envio",
+      description: "Visitantes que tentaram enviar o formulario.",
+      eventName: "lead_form_submit_attempt" as AnalyticsEventName,
+    },
+    {
+      id: "submit_successes" as const,
+      label: "Envio com sucesso",
+      description: "Visitantes com lead_form_submit_success no periodo.",
+      eventName: ANALYTICS_CONVERSION_EVENT,
+    },
+  ];
+
+  const stageVisitorIds = new Map<AnalyticsEventName, Set<string>>();
+
+  funnelDefinitions.forEach((stage) => {
+    stageVisitorIds.set(stage.eventName, new Set<string>());
+  });
+
+  analyticsEvents.forEach((event) => {
+    const visitors = stageVisitorIds.get(event.event_name);
+
+    if (visitors) {
+      visitors.add(event.visitor_id);
+    }
+  });
+
+  let hasPartialData = false;
+  const stages = funnelDefinitions.map((stage, index) => {
+    const count = stageVisitorIds.get(stage.eventName)?.size ?? 0;
+    const previousStage = index > 0 ? funnelDefinitions[index - 1] : null;
+    const previousCount = previousStage ? stageVisitorIds.get(previousStage.eventName)?.size ?? 0 : null;
+
+    if (previousCount === null || previousCount === 0) {
+      const isPartialStage = previousCount === 0 && count > 0;
+
+      if (isPartialStage) {
+        hasPartialData = true;
+      }
+
+      return {
+        id: stage.id,
+        label: stage.label,
+        description: stage.description,
+        count,
+        advanceRate: previousCount === null ? null : isPartialStage ? null : 0,
+        dropOffRate: previousCount === null ? null : isPartialStage ? null : 0,
+        previousCount,
+        hasPartialData: isPartialStage,
+      };
+    }
+
+    if (count > previousCount) {
+      hasPartialData = true;
+
+      return {
+        id: stage.id,
+        label: stage.label,
+        description: stage.description,
+        count,
+        advanceRate: null,
+        dropOffRate: null,
+        previousCount,
+        hasPartialData: true,
+      };
+    }
+
+    const advanceRate = Number(((count / previousCount) * 100).toFixed(1));
+    const dropOffRate = Number((100 - advanceRate).toFixed(1));
+
+    return {
+      id: stage.id,
+      label: stage.label,
+      description: stage.description,
+      count,
+      advanceRate,
+      dropOffRate,
+      previousCount,
+      hasPartialData: false,
+    };
+  });
+
+  const bottleneck = stages
+    .filter((stage) => stage.dropOffRate !== null && stage.previousCount !== null)
+    .sort((left, right) => (right.dropOffRate ?? 0) - (left.dropOffRate ?? 0))[0];
+
+  const submitErrorCount = new Set(
+    analyticsEvents
+      .filter((event) => event.event_name === "lead_form_submit_error")
+      .map((event) => event.visitor_id),
+  ).size;
+
+  return {
+    stages,
+    bottleneck: bottleneck && bottleneck.previousCount !== null
+      ? {
+          fromStageLabel: stages[stages.findIndex((stage) => stage.id === bottleneck.id) - 1]?.label ?? "Etapa anterior",
+          toStageLabel: bottleneck.label,
+          dropOffRate: bottleneck.dropOffRate ?? 0,
+          dropOffCount: bottleneck.previousCount - bottleneck.count,
+        }
+      : null,
+    submitErrorCount,
+    hasPartialData,
+  };
+}
+
+export function buildTrafficLeadComparison(data: DashboardPeriodPoint[]): DashboardTrafficLeadComparison {
+  if (data.length === 0) {
+    return {
+      previous: createTrafficLeadSnapshot("Metade inicial", []),
+      current: createTrafficLeadSnapshot("Metade final", []),
+      delta: {
+        visitorsPercent: null,
+        leadsPercent: null,
+        conversionRatePoints: null,
+      },
+      insights: [
+        {
+          id: "no_data",
+          title: "Sem base comparativa",
+          description: "Ainda nao ha dados suficientes no periodo para comparar trafego e geracao de leads.",
+          tone: "neutral",
+        },
+      ],
+      hasComparableWindow: false,
+    };
+  }
+
+  const splitIndex = Math.max(1, Math.ceil(data.length / 2));
+  const previousSlice = data.slice(0, splitIndex);
+  const currentSlice = data.slice(splitIndex);
+
+  const previous = createTrafficLeadSnapshot("Metade inicial", previousSlice);
+  const current = createTrafficLeadSnapshot(currentSlice.length > 0 ? "Metade final" : "Janela atual", currentSlice.length > 0 ? currentSlice : data);
+  const hasComparableWindow = currentSlice.length > 0;
+
+  const delta = {
+    visitorsPercent: calculatePercentDelta(previous.visitors, current.visitors),
+    leadsPercent: calculatePercentDelta(previous.leads, current.leads),
+    conversionRatePoints: hasComparableWindow
+      ? Number((current.conversionRate - previous.conversionRate).toFixed(1))
+      : null,
+  };
+
+  return {
+    previous,
+    current,
+    delta,
+    insights: buildTrafficLeadInsights(previous, current, delta, hasComparableWindow),
+    hasComparableWindow,
+  };
+}
+
+export function buildAnalyticsDashboardSnapshot(
+  analyticsEvents: DashboardAnalyticsRecord[],
+  leads: DashboardLeadRecord[],
+  period: DashboardPeriodValue,
+): DashboardAnalyticsSnapshot {
+  const performance = buildPerformanceSeries(analyticsEvents, leads, period);
+
+  return {
+    kpis: buildAnalyticsKpis(analyticsEvents, period),
+    performance,
+    attributionSources: buildAttributionSourceRows(analyticsEvents),
+    campaigns: buildCampaignRanking(analyticsEvents),
+    funnel: buildAcquisitionFunnel(analyticsEvents),
+    trafficLeadComparison: buildTrafficLeadComparison(performance),
+  };
 }
 
 export function buildRecentLeads(leads: DashboardLeadRecord[], limit = 6): DashboardRecentLeadItem[] {
@@ -425,8 +800,206 @@ export function buildAttentionPanel(
   };
 }
 
+function getOrCreateSourceAggregate(
+  sourceMap: Map<
+    string,
+    {
+      sourceKey: string;
+      sourceLabel: string;
+      attributionModel: DashboardAttributionModel;
+      detailLabel: string;
+      visitorIds: Set<string>;
+      conversionVisitorIds: Set<string>;
+    }
+  >,
+  attribution: ReturnType<typeof getNormalizedAttribution>,
+) {
+  const existing =
+    sourceMap.get(attribution.sourceKey) ??
+    {
+      sourceKey: attribution.sourceKey,
+      sourceLabel: attribution.sourceLabel,
+      attributionModel: attribution.attributionModel,
+      detailLabel: attribution.detailLabel,
+      visitorIds: new Set<string>(),
+      conversionVisitorIds: new Set<string>(),
+    };
+
+  sourceMap.set(attribution.sourceKey, existing);
+  return existing;
+}
+
+function hasCampaignSignal(event: DashboardAnalyticsRecord) {
+  return Boolean(
+    normalizeToken(event.utm_source)
+    || normalizeToken(event.utm_medium)
+    || normalizeToken(event.utm_campaign)
+    || normalizeToken(event.utm_term)
+    || normalizeToken(event.utm_content),
+  );
+}
+
+function isCampaignRelevantEvent(event: DashboardAnalyticsRecord) {
+  return event.event_name === "page_view" || event.event_name === ANALYTICS_CONVERSION_EVENT;
+}
+
+function getCampaignMetadata(
+  event: DashboardAnalyticsRecord,
+  source: ReturnType<typeof getNormalizedAttribution>,
+) {
+  const campaignLabel = getCampaignLabel(event.utm_campaign);
+  const mediumLabel = getMediumLabel(event.utm_medium);
+  const termLabel = getOptionalLabel(event.utm_term);
+  const contentLabel = getOptionalLabel(event.utm_content);
+  const campaignKey = normalizeToken(event.utm_campaign) || "sem_campanha";
+  const mediumKey = normalizeToken(event.utm_medium) || "sem_medio";
+  const signalPresent = hasCampaignSignal(event);
+  const hasSource = Boolean(normalizeToken(event.utm_source));
+  const hasMedium = Boolean(normalizeToken(event.utm_medium));
+  const hasCampaign = Boolean(normalizeToken(event.utm_campaign));
+  const attributionStatus = !signalPresent
+    ? "untagged"
+    : hasSource && hasMedium && hasCampaign
+      ? "complete"
+      : "partial";
+
+  return {
+    id: [source.sourceKey, mediumKey, campaignKey].join("::"),
+    campaignLabel: signalPresent ? campaignLabel : "Sem UTM / campanha",
+    sourceLabel: source.sourceLabel,
+    mediumLabel,
+    termLabel,
+    contentLabel,
+    attributionStatus,
+    attributionSummary: getCampaignAttributionSummary(attributionStatus, {
+      hasSource,
+      hasMedium,
+      hasCampaign,
+    }),
+  };
+}
+
+function getNormalizedAttribution(event: DashboardAnalyticsRecord) {
+  const utmSource = normalizeToken(event.utm_source);
+
+  if (utmSource) {
+    const normalizedSource = normalizeSourceToken(utmSource);
+    const mediumLabel = getOptionalLabel(event.utm_medium);
+
+    return {
+      sourceKey: normalizedSource.key,
+      sourceLabel: normalizedSource.label,
+      attributionModel: "utm" as const,
+      detailLabel: mediumLabel ? `UTM ${mediumLabel}` : "UTM source",
+    };
+  }
+
+  const referrerHost = getReferrerHost(event.referrer);
+
+  if (referrerHost) {
+    const normalizedReferrer = normalizeReferrerHost(referrerHost);
+    return {
+      sourceKey: normalizedReferrer.key,
+      sourceLabel: normalizedReferrer.label,
+      attributionModel: "referrer" as const,
+      detailLabel: `Referrer ${normalizedReferrer.hostLabel}`,
+    };
+  }
+
+  return {
+    sourceKey: "direct",
+    sourceLabel: "Direto / nao identificado",
+    attributionModel: "direct" as const,
+    detailLabel: "Sem UTM e sem referrer externo",
+  };
+}
+
 function createLeadMap(leads: DashboardLeadRecord[]) {
   return new Map(leads.map((lead) => [lead.id, lead]));
+}
+
+function createTrafficLeadSnapshot(label: string, points: DashboardPeriodPoint[]) {
+  const visitors = points.reduce((sum, point) => sum + point.visitors, 0);
+  const leads = points.reduce((sum, point) => sum + point.leads, 0);
+  const conversions = points.reduce((sum, point) => sum + point.conversions, 0);
+
+  return {
+    label,
+    visitors,
+    leads,
+    conversions,
+    conversionRate: visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(1)) : 0,
+  };
+}
+
+function buildTrafficLeadInsights(
+  previous: ReturnType<typeof createTrafficLeadSnapshot>,
+  current: ReturnType<typeof createTrafficLeadSnapshot>,
+  delta: DashboardTrafficLeadComparison["delta"],
+  hasComparableWindow: boolean,
+): DashboardTrafficLeadInsight[] {
+  if (!hasComparableWindow) {
+    return [
+      {
+        id: "single_window",
+        title: "Janela ainda curta para comparacao",
+        description: "Assim que houver mais pontos no periodo, o dashboard vai comparar a metade inicial com a final.",
+        tone: "neutral",
+      },
+    ];
+  }
+
+  const insights: DashboardTrafficLeadInsight[] = [];
+  const visitorDelta = delta.visitorsPercent ?? 0;
+  const leadDelta = delta.leadsPercent ?? 0;
+  const conversionDelta = delta.conversionRatePoints ?? 0;
+
+  if (visitorDelta >= 15 && leadDelta <= 5) {
+    insights.push({
+      id: "traffic_up_leads_flat",
+      title: "Trafego cresceu sem acompanhar a geracao de leads",
+      description: `Visitantes subiram ${formatSignedPercent(visitorDelta)}, mas leads variaram ${formatSignedPercent(leadDelta)} na metade final do periodo.`,
+      tone: "warning",
+    });
+  }
+
+  if (visitorDelta <= -15 && conversionDelta >= -1) {
+    insights.push({
+      id: "traffic_down_conversion_steady",
+      title: "Menos trafego, conversao sustentada",
+      description: `O volume de visitantes caiu ${Math.abs(visitorDelta).toFixed(1)}%, enquanto a taxa de conversao ficou em ${current.conversionRate.toFixed(1)}%.`,
+      tone: "neutral",
+    });
+  }
+
+  if (visitorDelta >= 10 && leadDelta >= 10) {
+    insights.push({
+      id: "traffic_and_leads_up",
+      title: "Crescimento simultaneo de trafego e leads",
+      description: `A metade final ganhou ${formatSignedPercent(visitorDelta)} em visitantes e ${formatSignedPercent(leadDelta)} em leads gerados.`,
+      tone: "positive",
+    });
+  }
+
+  if (conversionDelta >= 2 && Math.abs(visitorDelta) < 10) {
+    insights.push({
+      id: "efficiency_up",
+      title: "Conversao melhorou sem depender de mais trafego",
+      description: `A taxa de conversao avancou ${formatSignedPoints(conversionDelta)} p.p. com variacao moderada de visitantes.`,
+      tone: "positive",
+    });
+  }
+
+  if (insights.length === 0) {
+    insights.push({
+      id: "stable_window",
+      title: "Janela relativamente estavel",
+      description: "Nao houve deslocamentos relevantes entre volume de trafego, leads gerados e conversao no periodo comparado.",
+      tone: "neutral",
+    });
+  }
+
+  return insights.slice(0, 3);
 }
 
 function isTaskOverdue(task: DashboardTaskRecord) {
@@ -437,15 +1010,21 @@ function getDashboardPeriodOption(period: DashboardPeriodValue) {
   return DASHBOARD_PERIOD_OPTIONS.find((option) => option.value === period) ?? DASHBOARD_PERIOD_OPTIONS[1];
 }
 
-function getPeriodStartDate(days: number) {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() - (days - 1));
-  return date;
+function getPeriodRange(period: DashboardPeriodValue, options?: DashboardAggregationOptions) {
+  const periodOption = getDashboardPeriodOption(period);
+  const now = options?.now ? new Date(options.now) : new Date();
+  const endExclusive = new Date(now);
+  endExclusive.setHours(0, 0, 0, 0);
+  endExclusive.setDate(endExclusive.getDate() + 1);
+
+  const start = new Date(endExclusive);
+  start.setDate(endExclusive.getDate() - periodOption.days);
+
+  return { start, endExclusive };
 }
 
-function createPeriodBuckets(days: number) {
-  const startDate = getPeriodStartDate(days);
+function createPeriodBuckets(period: DashboardPeriodValue, options?: DashboardAggregationOptions) {
+  const { start, endExclusive } = getPeriodRange(period, options);
   const buckets = new Map<
     string,
     {
@@ -456,30 +1035,43 @@ function createPeriodBuckets(days: number) {
     }
   >();
 
-  for (let index = 0; index < days; index += 1) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(startDate.getDate() + index);
-    const key = currentDate.toISOString().slice(0, 10);
+  const currentDate = new Date(start);
+
+  while (currentDate < endExclusive) {
+    const key = toBucketKey(currentDate);
     buckets.set(key, {
       date: key,
       leads: 0,
       visitorIds: new Set<string>(),
       conversionVisitorIds: new Set<string>(),
     });
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return buckets;
 }
 
-function toBucketKey(value: string) {
-  return new Date(value).toISOString().slice(0, 10);
+function toBucketKey(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function formatDateLabel(date: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-  }).format(new Date(`${date}T12:00:00`));
+  const [year, month, day] = date.split("-");
+
+  if (!year || !month || !day) {
+    return date;
+  }
+
+  return `${day}/${month}`;
+}
+
+function isWithinPeriod(value: string, periodRange: { start: Date; endExclusive: Date }) {
+  const timestamp = new Date(value).getTime();
+  return timestamp >= periodRange.start.getTime() && timestamp < periodRange.endExclusive.getTime();
 }
 
 function getLeadStageKey(lead: Pick<DashboardLeadRecord, "pipeline_stage" | "status">) {
@@ -511,6 +1103,122 @@ function getStageLabelFromKey(stageKey: string) {
 function getSourceLabel(source: string | null | undefined) {
   const normalized = (source || "").trim();
   return normalized || "Nao informado";
+}
+
+function normalizeSourceToken(source: string) {
+  const normalized = source.trim().toLowerCase();
+
+  if (matchesAlias(normalized, ["google", "googleads", "google_ads", "adwords", "gads"])) {
+    return { key: "google", label: "Google" };
+  }
+
+  if (matchesAlias(normalized, ["linkedin", "lnkd", "linkedinads", "linkedin_ads"])) {
+    return { key: "linkedin", label: "LinkedIn" };
+  }
+
+  if (matchesAlias(normalized, ["facebook", "fb", "meta", "facebookads", "facebook_ads"])) {
+    return { key: "facebook", label: "Facebook" };
+  }
+
+  if (matchesAlias(normalized, ["instagram", "ig", "instagramads", "instagram_ads"])) {
+    return { key: "instagram", label: "Instagram" };
+  }
+
+  if (matchesAlias(normalized, ["whatsapp", "wa", "whatsapp_api"])) {
+    return { key: "whatsapp", label: "WhatsApp" };
+  }
+
+  if (matchesAlias(normalized, ["youtube", "youtu", "youtubeads", "youtube_ads"])) {
+    return { key: "youtube", label: "YouTube" };
+  }
+
+  if (matchesAlias(normalized, ["tiktok", "tik_tok", "tt"])) {
+    return { key: "tiktok", label: "TikTok" };
+  }
+
+  if (matchesAlias(normalized, ["email", "mail", "newsletter", "email_marketing"])) {
+    return { key: "email", label: "Email" };
+  }
+
+  if (matchesAlias(normalized, ["direct", "direto", "directo"])) {
+    return { key: "direct", label: "Direto / nao identificado" };
+  }
+
+  return {
+    key: slugify(normalized),
+    label: formatTokenLabel(source),
+  };
+}
+
+function normalizeReferrerHost(host: string) {
+  const normalized = host.trim().toLowerCase().replace(/^www\./, "");
+
+  if (normalized.includes("google.")) {
+    return { key: "google", label: "Google", hostLabel: "google" };
+  }
+
+  if (normalized.includes("linkedin.")) {
+    return { key: "linkedin", label: "LinkedIn", hostLabel: "linkedin.com" };
+  }
+
+  if (normalized.includes("facebook.") || normalized.startsWith("fb.")) {
+    return { key: "facebook", label: "Facebook", hostLabel: "facebook.com" };
+  }
+
+  if (normalized.includes("instagram.")) {
+    return { key: "instagram", label: "Instagram", hostLabel: "instagram.com" };
+  }
+
+  if (normalized.includes("whatsapp.") || normalized.includes("wa.me")) {
+    return { key: "whatsapp", label: "WhatsApp", hostLabel: "whatsapp.com" };
+  }
+
+  if (normalized.includes("youtu") || normalized.includes("youtube.")) {
+    return { key: "youtube", label: "YouTube", hostLabel: "youtube.com" };
+  }
+
+  if (normalized.includes("tiktok.")) {
+    return { key: "tiktok", label: "TikTok", hostLabel: "tiktok.com" };
+  }
+
+  if (normalized.includes("twitter.") || normalized.includes("x.com") || normalized.includes("t.co")) {
+    return { key: "x", label: "X / Twitter", hostLabel: "x.com" };
+  }
+
+  return {
+    key: slugify(normalized),
+    label: formatDomainLabel(normalized),
+    hostLabel: normalized,
+  };
+}
+
+function getReferrerHost(referrer: string | null | undefined) {
+  const value = referrer?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value).hostname || null;
+  } catch {
+    return value;
+  }
+}
+
+function getCampaignLabel(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized || "Sem campanha identificada";
+}
+
+function getMediumLabel(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized ? formatTokenLabel(normalized) : "Sem medio";
+}
+
+function getOptionalLabel(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized || null;
 }
 
 function getEventTitle(eventType: string) {
@@ -578,6 +1286,138 @@ function getEventDescription(event: DashboardEventRecord) {
 function getPayloadString(payload: Record<string, unknown>, key: string) {
   const value = payload[key];
   return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function sortAttributionRows(a: DashboardAttributionSourceRow, b: DashboardAttributionSourceRow) {
+  if (b.conversions !== a.conversions) {
+    return b.conversions - a.conversions;
+  }
+
+  if (b.visitors !== a.visitors) {
+    return b.visitors - a.visitors;
+  }
+
+  return a.sourceLabel.localeCompare(b.sourceLabel);
+}
+
+function sortCampaignRows(
+  a: DashboardCampaignRow,
+  b: DashboardCampaignRow,
+  sortMode: DashboardCampaignSortMode,
+) {
+  if (sortMode === "highest_volume") {
+    if (b.visitors !== a.visitors) {
+      return b.visitors - a.visitors;
+    }
+
+    if (b.conversions !== a.conversions) {
+      return b.conversions - a.conversions;
+    }
+  }
+
+  if (sortMode === "worst_performance") {
+    const leftRate = a.conversionRate ?? Number.POSITIVE_INFINITY;
+    const rightRate = b.conversionRate ?? Number.POSITIVE_INFINITY;
+
+    if (leftRate !== rightRate) {
+      return leftRate - rightRate;
+    }
+
+    if (b.visitors !== a.visitors) {
+      return b.visitors - a.visitors;
+    }
+  }
+
+  if (sortMode === "highest_conversion") {
+    if (b.conversions !== a.conversions) {
+      return b.conversions - a.conversions;
+    }
+
+    const leftRate = a.conversionRate ?? -1;
+    const rightRate = b.conversionRate ?? -1;
+    if (rightRate !== leftRate) {
+      return rightRate - leftRate;
+    }
+
+    if (b.visitors !== a.visitors) {
+      return b.visitors - a.visitors;
+    }
+  }
+
+  return a.campaignLabel.localeCompare(b.campaignLabel);
+}
+
+function matchesAlias(value: string, aliases: string[]) {
+  return aliases.some((alias) => value === alias || value.startsWith(`${alias}_`) || value.startsWith(`${alias}-`));
+}
+
+function normalizeToken(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized || "";
+}
+
+function calculatePercentDelta(previous: number, current: number) {
+  if (previous === 0) {
+    return current > 0 ? null : 0;
+  }
+
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+}
+
+function formatSignedPercent(value: number) {
+  return `${value > 0 ? "+" : "-"}${Math.abs(value).toFixed(1)}%`;
+}
+
+function formatSignedPoints(value: number) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(1)}`;
+}
+
+function slugify(value: string) {
+  return value.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "unknown";
+}
+
+function formatDomainLabel(value: string) {
+  return value
+    .replace(/^www\./, "")
+    .split(".")
+    .slice(-2)
+    .join(".")
+    .toLowerCase();
+}
+
+function formatTokenLabel(value: string) {
+  return value
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function getCampaignAttributionSummary(
+  status: DashboardCampaignRow["attributionStatus"],
+  inputs: {
+    hasSource: boolean;
+    hasMedium: boolean;
+    hasCampaign: boolean;
+  },
+) {
+  if (status === "untagged") {
+    return "Trafego sem UTM de campanha no periodo";
+  }
+
+  if (status === "complete") {
+    return "UTM source, medium e campaign presentes";
+  }
+
+  const missingFields = [
+    inputs.hasSource ? null : "source",
+    inputs.hasMedium ? null : "medium",
+    inputs.hasCampaign ? null : "campaign",
+  ].filter(Boolean);
+
+  return `UTM incompleta: falta ${missingFields.join(", ")}`;
 }
 
 function sortPipelineEntries(a: string, b: string) {

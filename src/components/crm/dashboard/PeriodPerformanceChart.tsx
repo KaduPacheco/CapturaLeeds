@@ -10,7 +10,8 @@ import {
 } from "recharts";
 import { LineChart } from "lucide-react";
 import DashboardSection from "./DashboardSection";
-import { SectionEmptyState, SectionErrorState, SectionInfoState } from "./SectionStates";
+import { AnalyticsUnavailableState, SectionEmptyState, SectionErrorState } from "./SectionStates";
+import { formatDashboardCount, formatDashboardPercent } from "./analyticsFormatting";
 import { DashboardPeriodPoint } from "@/types/dashboard";
 
 interface PeriodPerformanceChartProps {
@@ -36,8 +37,7 @@ const PeriodPerformanceChart = ({ data, isLoading, errorMessage, isUnavailable }
           </div>
         </div>
       ) : errorMessage && isUnavailable ? (
-        <SectionInfoState
-          title="Analytics aguardando habilitacao"
+        <AnalyticsUnavailableState
           description={errorMessage}
           icon={<LineChart className="h-5 w-5" />}
         />
@@ -159,22 +159,22 @@ function buildHighlights(data: DashboardPeriodPoint[]) {
   return [
     {
       label: "Visitantes",
-      value: String(totalVisitors),
+      value: formatDashboardCount(totalVisitors),
       description: "Volume total de visitantes unicos no recorte atual.",
     },
     {
       label: "Leads criados",
-      value: String(totalLeads),
+      value: formatDashboardCount(totalLeads),
       description: "Registros que chegaram ao CRM dentro da mesma janela.",
     },
     {
       label: "Conversoes",
-      value: String(totalConversions),
+      value: formatDashboardCount(totalConversions),
       description: "Visitantes com evento de envio bem-sucedido do formulario.",
     },
     {
       label: "Melhor dia",
-      value: bestConversionDay ? `${bestConversionDay.label} · ${bestConversionDay.conversionRate.toFixed(1)}%` : "-",
+      value: bestConversionDay ? `${bestConversionDay.label} - ${formatDashboardPercent(bestConversionDay.conversionRate)}` : "-",
       description: "Dia com a melhor taxa de conversao observada no periodo.",
     },
   ];
