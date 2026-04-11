@@ -1,9 +1,17 @@
 export type DashboardMetricTone = "neutral" | "positive" | "warning" | "danger";
+export type DashboardPeriodValue = "7d" | "30d" | "90d";
 
 export interface DashboardKpi {
-  id: "total_leads" | "new_leads" | "open_tasks" | "overdue_tasks";
+  id:
+    | "total_leads"
+    | "new_leads"
+    | "open_tasks"
+    | "overdue_tasks"
+    | "period_visitors"
+    | "conversion_rate";
   label: string;
   value: number;
+  valueDisplay?: string;
   description: string;
   helperText: string;
   tone: DashboardMetricTone;
@@ -61,4 +69,19 @@ export interface DashboardAttentionMetric {
 export interface DashboardAttentionData {
   metrics: DashboardAttentionMetric[];
   overdueTasksPreview: DashboardUpcomingTaskItem[];
+}
+
+export interface DashboardPeriodOption {
+  value: DashboardPeriodValue;
+  label: string;
+  days: number;
+}
+
+export interface DashboardPeriodPoint {
+  date: string;
+  label: string;
+  visitors: number;
+  leads: number;
+  conversions: number;
+  conversionRate: number;
 }

@@ -1,10 +1,14 @@
-import { supabase } from "@/lib/supabase";
+import { assertSupabaseConfigured, supabase } from "@/lib/supabase";
+import { AnalyticsEventName, AnalyticsEventRecord } from "@/types/analytics";
 import { CrmLead, CrmLeadEvent, CrmLeadTask } from "@/types/crm";
 import {
   DashboardActivityItem,
   DashboardAttentionData,
   DashboardChartDatum,
   DashboardKpi,
+  DashboardPeriodOption,
+  DashboardPeriodPoint,
+  DashboardPeriodValue,
   DashboardRecentLeadItem,
   DashboardUpcomingTaskItem,
 } from "@/types/dashboard";
@@ -30,6 +34,18 @@ type DashboardTaskRecord = Pick<
 >;
 
 type DashboardEventRecord = Pick<CrmLeadEvent, "id" | "lead_id" | "event_type" | "payload" | "created_at">;
+type DashboardAnalyticsRecord = Pick<
+  AnalyticsEventRecord,
+  | "event_name"
+  | "visitor_id"
+  | "session_id"
+  | "page_path"
+  | "referrer"
+  | "utm_source"
+  | "utm_medium"
+  | "utm_campaign"
+  | "occurred_at"
+>;
 
 const PIPELINE_COLORS: Record<string, string> = {
   novo: "#2563eb",
@@ -41,10 +57,19 @@ const PIPELINE_COLORS: Record<string, string> = {
 };
 
 const SOURCE_COLORS = ["#2563eb", "#0f766e", "#7c3aed", "#ea580c", "#dc2626", "#0891b2", "#64748b"];
-
 const PIPELINE_ORDER = ["novo", "em_contato", "qualificado", "ganho", "perdido", "sem_estagio"];
+const ANALYTICS_CONVERSION_EVENT: AnalyticsEventName = "lead_form_submit_success";
+export const ANALYTICS_MIGRATION_FILE = "05_analytics_events.sql";
+
+export const DASHBOARD_PERIOD_OPTIONS: DashboardPeriodOption[] = [
+  { value: "7d", label: "7 dias", days: 7 },
+  { value: "30d", label: "30 dias", days: 30 },
+  { value: "90d", label: "90 dias", days: 90 },
+];
 
 export async function getDashboardLeadsDataset(): Promise<DashboardLeadRecord[]> {
+  assertSupabaseConfigured();
+
   const { data, error } = await supabase
     .from("leads")
     .select("id,nome,empresa,origem,status,pipeline_stage,owner_id,whatsapp,email,created_at,updated_at")
@@ -58,6 +83,8 @@ export async function getDashboardLeadsDataset(): Promise<DashboardLeadRecord[]>
 }
 
 export async function getDashboardTasksDataset(): Promise<DashboardTaskRecord[]> {
+  assertSupabaseConfigured();
+
   const { data, error } = await supabase
     .from("lead_tasks")
     .select("id,lead_id,assignee_id,title,due_date,completed,created_at,updated_at")
@@ -71,6 +98,8 @@ export async function getDashboardTasksDataset(): Promise<DashboardTaskRecord[]>
 }
 
 export async function getDashboardEventsDataset(limit = 10): Promise<DashboardEventRecord[]> {
+  assertSupabaseConfigured();
+
   const { data, error } = await supabase
     .from("lead_events")
     .select("id,lead_id,event_type,payload,created_at")
@@ -84,27 +113,61 @@ export async function getDashboardEventsDataset(limit = 10): Promise<DashboardEv
   return (data ?? []) as DashboardEventRecord[];
 }
 
-export function buildLeadKpis(leads: DashboardLeadRecord[]): DashboardKpi[] {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+export async function getDashboardAnalyticsDataset(period: DashboardPeriodValue): Promise<DashboardAnalyticsRecord[]> {
+  assertSupabaseConfigured();
 
-  const newLeads = leads.filter((lead) => new Date(lead.created_at).getTime() >= sevenDaysAgo.getTime()).length;
+  const periodOption = getDashboardPeriodOption(period);
+  const { data, error } = await supabase
+    .from("analytics_events")
+    .select("event_name,visitor_id,session_id,page_path,referrer,utm_source,utm_medium,utm_campaign,occurred_at")
+    .gte("occurred_at", getPeriodStartDate(periodOption.days).toISOString())
+    .in("event_name", ["page_view", ANALYTICS_CONVERSION_EVENT])
+    .order("occurred_at", { ascending: true });
+
+  if (error) {
+    throw new Error(getAnalyticsErrorMessage(error.message));
+  }
+
+  return (data ?? []) as DashboardAnalyticsRecord[];
+}
+
+export function isAnalyticsUnavailableErrorMessage(message?: string | null) {
+  if (!message) {
+    return false;
+  }
+
+  const normalizedMessage = message.toLowerCase();
+
+  return (
+    normalizedMessage.includes("analytics_events")
+    || normalizedMessage.includes(ANALYTICS_MIGRATION_FILE.toLowerCase())
+    || normalizedMessage.includes("could not find the table")
+    || normalizedMessage.includes("relation")
+    || normalizedMessage.includes("schema cache")
+    || normalizedMessage.includes("permission denied")
+  );
+}
+
+export function buildLeadKpis(leads: DashboardLeadRecord[], period: DashboardPeriodValue): DashboardKpi[] {
+  const periodOption = getDashboardPeriodOption(period);
+  const periodStart = getPeriodStartDate(periodOption.days).getTime();
+  const newLeads = leads.filter((lead) => new Date(lead.created_at).getTime() >= periodStart).length;
 
   return [
     {
       id: "total_leads",
       label: "Total de leads",
       value: leads.length,
-      description: "Base total visivel pela sua sessao autenticada.",
-      helperText: "Volume consolidado do funil atual.",
+      description: "Base total visivel pela sessao autenticada.",
+      helperText: "Visao consolidada do CRM.",
       tone: "neutral",
     },
     {
       id: "new_leads",
-      label: "Novos em 7 dias",
+      label: `Novos em ${periodOption.label}`,
       value: newLeads,
-      description: "Entradas recentes vindas da operacao comercial.",
-      helperText: "Janela movel dos ultimos 7 dias.",
+      description: "Entradas recentes capturadas no periodo selecionado.",
+      helperText: "Ritmo de aquisicao comercial.",
       tone: newLeads > 0 ? "positive" : "neutral",
     },
   ];
@@ -113,9 +176,7 @@ export function buildLeadKpis(leads: DashboardLeadRecord[]): DashboardKpi[] {
 export function buildTaskKpis(tasks: DashboardTaskRecord[]): DashboardKpi[] {
   const now = Date.now();
   const openTasks = tasks.filter((task) => !task.completed).length;
-  const overdueTasks = tasks.filter(
-    (task) => !task.completed && new Date(task.due_date).getTime() < now,
-  ).length;
+  const overdueTasks = tasks.filter((task) => !task.completed && new Date(task.due_date).getTime() < now).length;
 
   return [
     {
@@ -123,7 +184,7 @@ export function buildTaskKpis(tasks: DashboardTaskRecord[]): DashboardKpi[] {
       label: "Tarefas abertas",
       value: openTasks,
       description: "Follow-ups ainda pendentes de execucao.",
-      helperText: "Inclui toda a agenda em aberto.",
+      helperText: "Agenda total em aberto.",
       tone: openTasks > 0 ? "warning" : "neutral",
     },
     {
@@ -131,8 +192,40 @@ export function buildTaskKpis(tasks: DashboardTaskRecord[]): DashboardKpi[] {
       label: "Tarefas atrasadas",
       value: overdueTasks,
       description: "Itens vencidos que precisam de atencao imediata.",
-      helperText: overdueTasks > 0 ? "Prioridade operacional alta." : "Agenda dentro do prazo.",
+      helperText: overdueTasks > 0 ? "Prioridade operacional alta." : "Agenda sob controle.",
       tone: overdueTasks > 0 ? "danger" : "positive",
+    },
+  ];
+}
+
+export function buildAnalyticsKpis(
+  analyticsEvents: DashboardAnalyticsRecord[],
+  period: DashboardPeriodValue,
+): DashboardKpi[] {
+  const periodOption = getDashboardPeriodOption(period);
+  const pageViews = analyticsEvents.filter((event) => event.event_name === "page_view");
+  const successes = analyticsEvents.filter((event) => event.event_name === ANALYTICS_CONVERSION_EVENT);
+  const uniqueVisitors = new Set(pageViews.map((event) => event.visitor_id)).size;
+  const convertingVisitors = new Set(successes.map((event) => event.visitor_id)).size;
+  const conversionRate = uniqueVisitors > 0 ? (convertingVisitors / uniqueVisitors) * 100 : 0;
+
+  return [
+    {
+      id: "period_visitors",
+      label: `Visitantes em ${periodOption.label}`,
+      value: uniqueVisitors,
+      description: "Visitantes unicos medidos por visitor_id no periodo selecionado.",
+      helperText: `${pageViews.length} page views registradas`,
+      tone: uniqueVisitors > 0 ? "neutral" : "warning",
+    },
+    {
+      id: "conversion_rate",
+      label: "Taxa de conversao",
+      value: conversionRate,
+      valueDisplay: `${conversionRate.toFixed(1)}%`,
+      description: "Visitantes unicos com evento de sucesso sobre os visitantes com page view.",
+      helperText: `${convertingVisitors} visitantes converteram`,
+      tone: conversionRate >= 10 ? "positive" : conversionRate > 0 ? "warning" : "neutral",
     },
   ];
 }
@@ -184,6 +277,54 @@ export function buildSourceDistribution(leads: DashboardLeadRecord[]): Dashboard
     percentage: Number(((value / total) * 100).toFixed(1)),
     color: SOURCE_COLORS[index % SOURCE_COLORS.length],
   }));
+}
+
+export function buildPerformanceSeries(
+  analyticsEvents: DashboardAnalyticsRecord[],
+  leads: DashboardLeadRecord[],
+  period: DashboardPeriodValue,
+): DashboardPeriodPoint[] {
+  const periodOption = getDashboardPeriodOption(period);
+  const buckets = createPeriodBuckets(periodOption.days);
+  const pageViews = analyticsEvents.filter((event) => event.event_name === "page_view");
+  const successes = analyticsEvents.filter((event) => event.event_name === ANALYTICS_CONVERSION_EVENT);
+
+  pageViews.forEach((event) => {
+    const bucket = buckets.get(toBucketKey(event.occurred_at));
+    if (!bucket) {
+      return;
+    }
+    bucket.visitorIds.add(event.visitor_id);
+  });
+
+  successes.forEach((event) => {
+    const bucket = buckets.get(toBucketKey(event.occurred_at));
+    if (!bucket) {
+      return;
+    }
+    bucket.conversionVisitorIds.add(event.visitor_id);
+  });
+
+  leads.forEach((lead) => {
+    const bucket = buckets.get(toBucketKey(lead.created_at));
+    if (!bucket) {
+      return;
+    }
+    bucket.leads += 1;
+  });
+
+  return Array.from(buckets.values()).map((bucket) => {
+    const visitors = bucket.visitorIds.size;
+    const conversions = bucket.conversionVisitorIds.size;
+    return {
+      date: bucket.date,
+      label: formatDateLabel(bucket.date),
+      visitors,
+      leads: bucket.leads,
+      conversions,
+      conversionRate: visitors > 0 ? Number(((conversions / visitors) * 100).toFixed(1)) : 0,
+    };
+  });
 }
 
 export function buildRecentLeads(leads: DashboardLeadRecord[], limit = 6): DashboardRecentLeadItem[] {
@@ -292,6 +433,55 @@ function isTaskOverdue(task: DashboardTaskRecord) {
   return !task.completed && new Date(task.due_date).getTime() < Date.now();
 }
 
+function getDashboardPeriodOption(period: DashboardPeriodValue) {
+  return DASHBOARD_PERIOD_OPTIONS.find((option) => option.value === period) ?? DASHBOARD_PERIOD_OPTIONS[1];
+}
+
+function getPeriodStartDate(days: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - (days - 1));
+  return date;
+}
+
+function createPeriodBuckets(days: number) {
+  const startDate = getPeriodStartDate(days);
+  const buckets = new Map<
+    string,
+    {
+      date: string;
+      leads: number;
+      visitorIds: Set<string>;
+      conversionVisitorIds: Set<string>;
+    }
+  >();
+
+  for (let index = 0; index < days; index += 1) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + index);
+    const key = currentDate.toISOString().slice(0, 10);
+    buckets.set(key, {
+      date: key,
+      leads: 0,
+      visitorIds: new Set<string>(),
+      conversionVisitorIds: new Set<string>(),
+    });
+  }
+
+  return buckets;
+}
+
+function toBucketKey(value: string) {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function formatDateLabel(date: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  }).format(new Date(`${date}T12:00:00`));
+}
+
 function getLeadStageKey(lead: Pick<DashboardLeadRecord, "pipeline_stage" | "status">) {
   const rawValue = (lead.pipeline_stage || lead.status || "").trim().toLowerCase();
   return rawValue || "sem_estagio";
@@ -339,6 +529,14 @@ function getEventTitle(eventType: string) {
       return "Status atualizado";
     case "pipeline_change":
       return "Estagio atualizado";
+    case "owner_changed":
+      return "Ownership atualizado";
+    case "cadence_task_created":
+      return "Cadencia automatica";
+    case "automation_webhook_dispatched":
+      return "Webhook disparado";
+    case "automation_webhook_failed":
+      return "Falha de automacao";
     default:
       return toTitleCase(eventType);
   }
@@ -347,7 +545,8 @@ function getEventTitle(eventType: string) {
 function getEventDescription(event: DashboardEventRecord) {
   const taskTitle = getPayloadString(event.payload, "title");
   const contentPreview = getPayloadString(event.payload, "content_preview");
-  const nextStatus = getPayloadString(event.payload, "to");
+  const nextStatus = getPayloadString(event.payload, "next_stage") || getPayloadString(event.payload, "to");
+  const nextOwner = getPayloadString(event.payload, "next_owner_id");
 
   switch (event.event_type) {
     case "lead_created":
@@ -363,6 +562,14 @@ function getEventDescription(event: DashboardEventRecord) {
     case "status_change":
     case "pipeline_change":
       return nextStatus ? `Novo estado registrado: ${toTitleCase(nextStatus)}` : "Houve atualizacao no status comercial.";
+    case "owner_changed":
+      return nextOwner ? `Lead atribuido ao responsavel ${nextOwner.slice(0, 8)}.` : "O ownership do lead foi ajustado.";
+    case "cadence_task_created":
+      return taskTitle ? `A cadencia criou a tarefa: ${taskTitle}` : "Uma tarefa automatica foi criada para manter o follow-up.";
+    case "automation_webhook_dispatched":
+      return "O CRM notificou a automacao externa mantendo a cadencia local como fonte principal.";
+    case "automation_webhook_failed":
+      return "A notificacao externa falhou, mas a operacao local do CRM foi preservada.";
     default:
       return "Atividade registrada automaticamente pelo CRM.";
   }
@@ -390,6 +597,14 @@ function sortPipelineEntries(a: string, b: string) {
   }
 
   return aIndex - bIndex;
+}
+
+function getAnalyticsErrorMessage(message: string) {
+  if (isAnalyticsUnavailableErrorMessage(message)) {
+    return `A base de analytics ainda nao esta disponivel neste ambiente. Aplique a migration ${ANALYTICS_MIGRATION_FILE} para habilitar visitantes e conversao.`;
+  }
+
+  return `Falha ao carregar analytics do dashboard: ${message}`;
 }
 
 function toTitleCase(value: string) {

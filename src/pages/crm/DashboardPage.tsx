@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
@@ -5,32 +6,44 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CalendarClock,
+  Globe,
   LayoutDashboard,
+  Percent,
   Users,
 } from "lucide-react";
 import AttentionPanel from "@/components/crm/dashboard/AttentionPanel";
 import ActivityFeed from "@/components/crm/dashboard/ActivityFeed";
 import KpiCard from "@/components/crm/dashboard/KpiCard";
+import PeriodPerformanceChart from "@/components/crm/dashboard/PeriodPerformanceChart";
 import PipelineChart from "@/components/crm/dashboard/PipelineChart";
 import RecentLeadsList from "@/components/crm/dashboard/RecentLeadsList";
 import SourceChart from "@/components/crm/dashboard/SourceChart";
 import UpcomingTasksList from "@/components/crm/dashboard/UpcomingTasksList";
 import { Button } from "@/components/ui/Button";
 import {
+  ANALYTICS_MIGRATION_FILE,
+  DASHBOARD_PERIOD_OPTIONS,
   buildActivityFeed,
+  buildAnalyticsKpis,
   buildAttentionPanel,
   buildLeadKpis,
+  buildPerformanceSeries,
   buildPipelineDistribution,
   buildRecentLeads,
   buildSourceDistribution,
   buildTaskKpis,
   buildUpcomingTasks,
+  getDashboardAnalyticsDataset,
   getDashboardEventsDataset,
   getDashboardLeadsDataset,
   getDashboardTasksDataset,
+  isAnalyticsUnavailableErrorMessage,
 } from "@/services/dashboardService";
+import { DashboardPeriodValue } from "@/types/dashboard";
 
 const DashboardPage = () => {
+  const [period, setPeriod] = useState<DashboardPeriodValue>("30d");
+
   const leadsQuery = useQuery({
     queryKey: ["crm-dashboard", "leads"],
     queryFn: getDashboardLeadsDataset,
@@ -49,22 +62,62 @@ const DashboardPage = () => {
     staleTime: 20_000,
   });
 
-  const leadMetrics = leadsQuery.data ? buildLeadKpis(leadsQuery.data) : [];
-  const taskMetrics = tasksQuery.data ? buildTaskKpis(tasksQuery.data) : [];
+  const analyticsQuery = useQuery({
+    queryKey: ["crm-dashboard", "analytics", period],
+    queryFn: () => getDashboardAnalyticsDataset(period),
+    staleTime: 20_000,
+    retry: (failureCount, error) => {
+      if (isAnalyticsUnavailableErrorMessage(getErrorMessage(error))) {
+        return false;
+      }
 
-  const pipelineData = leadsQuery.data ? buildPipelineDistribution(leadsQuery.data) : [];
-  const sourceData = leadsQuery.data ? buildSourceDistribution(leadsQuery.data) : [];
-  const recentLeads = leadsQuery.data ? buildRecentLeads(leadsQuery.data) : [];
-  const upcomingTasks = tasksQuery.data ? buildUpcomingTasks(tasksQuery.data, leadsQuery.data) : [];
-  const activityFeed = eventsQuery.data ? buildActivityFeed(eventsQuery.data, leadsQuery.data) : [];
-  const attentionData =
-    leadsQuery.data && tasksQuery.data ? buildAttentionPanel(leadsQuery.data, tasksQuery.data) : undefined;
+      return failureCount < 1;
+    },
+  });
+
+  const analyticsErrorMessage = analyticsQuery.isError ? getErrorMessage(analyticsQuery.error) : undefined;
+  const analyticsUnavailable = isAnalyticsUnavailableErrorMessage(analyticsErrorMessage);
+  const hasOperationalErrors = leadsQuery.isError || tasksQuery.isError || eventsQuery.isError;
+
+  const leadMetrics = useMemo(
+    () => (leadsQuery.data ? buildLeadKpis(leadsQuery.data, period) : []),
+    [leadsQuery.data, period],
+  );
+  const taskMetrics = useMemo(() => (tasksQuery.data ? buildTaskKpis(tasksQuery.data) : []), [tasksQuery.data]);
+  const analyticsMetrics = useMemo(
+    () => (analyticsQuery.data ? buildAnalyticsKpis(analyticsQuery.data, period) : []),
+    [analyticsQuery.data, period],
+  );
+
+  const pipelineData = useMemo(() => (leadsQuery.data ? buildPipelineDistribution(leadsQuery.data) : []), [leadsQuery.data]);
+  const sourceData = useMemo(() => (leadsQuery.data ? buildSourceDistribution(leadsQuery.data) : []), [leadsQuery.data]);
+  const performanceData = useMemo(
+    () =>
+      leadsQuery.data && analyticsQuery.data ? buildPerformanceSeries(analyticsQuery.data, leadsQuery.data, period) : [],
+    [analyticsQuery.data, leadsQuery.data, period],
+  );
+  const recentLeads = useMemo(() => (leadsQuery.data ? buildRecentLeads(leadsQuery.data) : []), [leadsQuery.data]);
+  const upcomingTasks = useMemo(
+    () => (tasksQuery.data ? buildUpcomingTasks(tasksQuery.data, leadsQuery.data) : []),
+    [leadsQuery.data, tasksQuery.data],
+  );
+  const activityFeed = useMemo(
+    () => (eventsQuery.data ? buildActivityFeed(eventsQuery.data, leadsQuery.data) : []),
+    [eventsQuery.data, leadsQuery.data],
+  );
+  const attentionData = useMemo(
+    () => (leadsQuery.data && tasksQuery.data ? buildAttentionPanel(leadsQuery.data, tasksQuery.data) : undefined),
+    [leadsQuery.data, tasksQuery.data],
+  );
 
   const lastUpdatedAt = Math.max(
     leadsQuery.dataUpdatedAt || 0,
     tasksQuery.dataUpdatedAt || 0,
     eventsQuery.dataUpdatedAt || 0,
+    analyticsQuery.dataUpdatedAt || 0,
   );
+
+  const selectedPeriod = DASHBOARD_PERIOD_OPTIONS.find((option) => option.value === period) ?? DASHBOARD_PERIOD_OPTIONS[1];
 
   return (
     <div className="space-y-6">
@@ -78,33 +131,60 @@ const DashboardPage = () => {
             </div>
             <div className="space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
-                Acompanhe volume, execucao comercial e pontos de atencao em um so lugar.
+                Operacao comercial, aquisicao e pontos de atencao em uma unica tela.
               </h1>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground lg:text-base">
-                O dashboard consolida pipeline, origens, follow-ups e atividade recente usando apenas os dados ja
-                disponiveis no CRM autenticado.
+                O painel combina pipeline, agenda, atividade do time e a nova camada de analytics da landing para
+                mostrar volume, execucao e conversao com dados reais do produto.
               </p>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[420px]">
+            <div className="rounded-3xl border border-border/70 bg-background/80 p-4 backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Janela</p>
+              <div className="mt-3 flex items-center gap-3">
+                <select
+                  value={period}
+                  onChange={(event) => setPeriod(event.target.value as DashboardPeriodValue)}
+                  className="h-10 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
+                  aria-label="Selecionar periodo do dashboard"
+                >
+                  {DASHBOARD_PERIOD_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">KPIs e grafico temporal atualizados em {selectedPeriod.label}.</p>
+            </div>
+
             <div className="rounded-3xl border border-border/70 bg-background/80 p-4 backdrop-blur">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
               <p className="mt-3 text-sm font-medium text-foreground">
-                {leadsQuery.isError || tasksQuery.isError || eventsQuery.isError
+                {hasOperationalErrors
                   ? "Algumas secoes exigem revisao"
-                  : "Dashboard sincronizado"}
+                  : analyticsUnavailable
+                    ? "CRM operacional ativo · analytics pendente"
+                    : analyticsQuery.isError
+                      ? "Analytics exige revisao"
+                      : "Dashboard sincronizado"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {lastUpdatedAt
-                  ? `Ultima atualizacao em ${formatDateTime(lastUpdatedAt)}`
-                  : "Sincronizando dados do CRM"}
+                {hasOperationalErrors
+                  ? "Leads, tarefas ou atividade recente precisam de revisao."
+                  : analyticsUnavailable
+                    ? `Aplicar ${ANALYTICS_MIGRATION_FILE} habilita visitantes, conversao e evolucao por periodo.`
+                    : lastUpdatedAt
+                      ? `Ultima atualizacao em ${formatDateTime(lastUpdatedAt)}`
+                      : "Sincronizando dados do CRM"}
               </p>
             </div>
 
-            <Button asChild className="h-auto justify-between rounded-3xl px-4 py-4">
+            <Button asChild className="h-auto justify-between rounded-3xl px-4 py-4 sm:col-span-2">
               <Link to="/crm/leads">
-                Explorar leads
+                Explorar leads e follow-ups
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -112,7 +192,7 @@ const DashboardPage = () => {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <KpiCard
           metric={leadMetrics.find((metric) => metric.id === "total_leads")}
           icon={Users}
@@ -137,7 +217,34 @@ const DashboardPage = () => {
           isLoading={tasksQuery.isLoading}
           errorMessage={tasksQuery.isError ? getErrorMessage(tasksQuery.error) : undefined}
         />
+        <KpiCard
+          metric={analyticsMetrics.find((metric) => metric.id === "period_visitors")}
+          icon={Globe}
+          isLoading={analyticsQuery.isLoading}
+          errorMessage={analyticsErrorMessage}
+          isUnavailable={analyticsUnavailable}
+        />
+        <KpiCard
+          metric={analyticsMetrics.find((metric) => metric.id === "conversion_rate")}
+          icon={Percent}
+          isLoading={analyticsQuery.isLoading}
+          errorMessage={analyticsErrorMessage}
+          isUnavailable={analyticsUnavailable}
+        />
       </section>
+
+      <PeriodPerformanceChart
+        data={performanceData}
+        isLoading={analyticsQuery.isLoading || leadsQuery.isLoading}
+        errorMessage={
+          analyticsQuery.isError
+            ? analyticsErrorMessage
+            : leadsQuery.isError
+              ? getErrorMessage(leadsQuery.error)
+              : undefined
+        }
+        isUnavailable={analyticsUnavailable}
+      />
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr,0.85fr]">
         <PipelineChart
