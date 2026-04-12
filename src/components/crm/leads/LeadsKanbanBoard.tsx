@@ -1,7 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarClock } from "lucide-react";
 import LeadStageBadge from "@/components/crm/LeadStageBadge";
-import { LeadTaskStatusSummary, formatTaskDueDate, getLeadStageValue, getOwnerDisplayLabel } from "@/lib/crmLeadPresentation";
+import {
+  LeadTaskStatusSummary,
+  formatTaskDueDate,
+  getLeadOperationalPriority,
+  getLeadSourceLabel,
+  getLeadStageValue,
+  getOwnerDisplayLabel,
+} from "@/lib/crmLeadPresentation";
 import { CrmLead, PipelineStage } from "@/types/crm";
 import { cn } from "@/utils/cn";
 
@@ -49,19 +56,33 @@ const LeadsKanbanBoard = ({ items, currentUserId, ownerLabelMap }: LeadsKanbanBo
                   Nenhum lead nesta coluna.
                 </div>
               ) : (
-                columnItems.map(({ lead, taskSummary }) => (
+                columnItems.map(({ lead, taskSummary }) => {
+                  const priority = getLeadOperationalPriority({ lead, taskSummary });
+
+                  return (
                   <article key={lead.id} className="rounded-2xl border border-border/70 bg-background/80 p-4 shadow-sm">
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <LeadStageBadge lead={lead} className="text-[10px]" />
+                        <p className={cn(
+                          "pt-2 text-[11px] font-semibold uppercase tracking-[0.14em]",
+                          priority.tone === "danger" && "text-destructive",
+                          priority.tone === "warning" && "text-amber-700 dark:text-amber-300",
+                          priority.tone === "success" && "text-secondary",
+                          priority.tone === "neutral" && "text-primary",
+                          priority.tone === "muted" && "text-muted-foreground",
+                        )}>
+                          {priority.label}
+                        </p>
                         <p className="pt-2 font-semibold text-foreground">{lead.nome || "Lead sem nome"}</p>
                         <p className="text-sm text-muted-foreground">{lead.empresa || "Empresa nao informada"}</p>
                       </div>
 
                       <div className="space-y-1 text-xs text-muted-foreground">
                         <p>Responsavel: {getOwnerDisplayLabel(lead.owner_id, currentUserId, ownerLabelMap)}</p>
-                        <p>Origem: {lead.origem || "Nao informada"}</p>
+                        <p>Origem: {getLeadSourceLabel(lead.origem)}</p>
                         <p>{taskSummary.openCount} follow-ups abertos - {taskSummary.overdueCount} vencidos</p>
+                        <p>{priority.helper}</p>
                       </div>
 
                       {taskSummary.nextTask ? (
@@ -91,7 +112,8 @@ const LeadsKanbanBoard = ({ items, currentUserId, ownerLabelMap }: LeadsKanbanBo
                       </Link>
                     </div>
                   </article>
-                ))
+                  );
+                })
               )}
             </div>
           </section>

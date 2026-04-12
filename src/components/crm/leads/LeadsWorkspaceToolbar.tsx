@@ -1,15 +1,23 @@
-import { KanbanSquare, LayoutList, ListFilter, Users } from "lucide-react";
+import { KanbanSquare, LayoutList, ListFilter, RotateCcw, Search, Users } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import {
   LEAD_OWNER_FILTER_ALL,
   LEAD_OWNER_FILTER_MINE,
+  LEAD_SOURCE_FILTER_ALL,
+  LEAD_SOURCE_FILTER_WITHOUT_SOURCE,
   LEAD_OWNER_FILTER_UNASSIGNED,
+  LeadPeriodFilter,
   LeadOwnerFilter,
+  LeadSortOption,
+  LeadSourceFilter,
   LeadsViewMode,
   LeadStageFilter,
   PIPELINE_STAGE_OPTIONS,
+  getLeadSourceFilterValue,
   getOwnerFilterValueForId,
 } from "@/lib/crmLeadPresentation";
-import { CrmOwnerOption } from "@/types/crm";
+import { CrmOwnerOption, CrmSourceOption } from "@/types/crm";
 import { cn } from "@/utils/cn";
 
 interface LeadsWorkspaceToolbarProps {
@@ -17,12 +25,23 @@ interface LeadsWorkspaceToolbarProps {
   visibleLeads: number;
   overdueLeads: number;
   unassignedLeads: number;
+  searchTerm: string;
   stageFilter: LeadStageFilter;
   ownerFilter: LeadOwnerFilter;
+  sourceFilter: LeadSourceFilter;
+  periodFilter: LeadPeriodFilter;
+  sortOption: LeadSortOption;
   ownerOptions: CrmOwnerOption[];
+  sourceOptions: CrmSourceOption[];
   viewMode: LeadsViewMode;
+  hasActiveFilters: boolean;
+  onSearchTermChange: (value: string) => void;
   onStageFilterChange: (value: LeadStageFilter) => void;
   onOwnerFilterChange: (value: LeadOwnerFilter) => void;
+  onSourceFilterChange: (value: LeadSourceFilter) => void;
+  onPeriodFilterChange: (value: LeadPeriodFilter) => void;
+  onSortOptionChange: (value: LeadSortOption) => void;
+  onClearFilters: () => void;
   onViewModeChange: (value: LeadsViewMode) => void;
 }
 
@@ -31,12 +50,23 @@ const LeadsWorkspaceToolbar = ({
   visibleLeads,
   overdueLeads,
   unassignedLeads,
+  searchTerm,
   stageFilter,
   ownerFilter,
+  sourceFilter,
+  periodFilter,
+  sortOption,
   ownerOptions,
+  sourceOptions,
   viewMode,
+  hasActiveFilters,
+  onSearchTermChange,
   onStageFilterChange,
   onOwnerFilterChange,
+  onSourceFilterChange,
+  onPeriodFilterChange,
+  onSortOptionChange,
+  onClearFilters,
   onViewModeChange,
 }: LeadsWorkspaceToolbarProps) => {
   return (
@@ -67,8 +97,21 @@ const LeadsWorkspaceToolbar = ({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.3fr),minmax(0,1fr)]">
+        <label className="space-y-2 text-sm">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Busca</span>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(event) => onSearchTermChange(event.target.value)}
+              placeholder="Buscar por nome, empresa, e-mail ou whatsapp"
+              className="h-11 rounded-2xl pl-10"
+            />
+          </div>
+        </label>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label className="space-y-2 text-sm">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Etapa</span>
             <select
@@ -81,6 +124,23 @@ const LeadsWorkspaceToolbar = ({
               {PIPELINE_STAGE_OPTIONS.map((stage) => (
                 <option key={stage.value} value={stage.value}>
                   {stage.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2 text-sm">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Origem</span>
+            <select
+              value={sourceFilter}
+              onChange={(event) => onSourceFilterChange(event.target.value as LeadSourceFilter)}
+              className="h-10 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value={LEAD_SOURCE_FILTER_ALL}>Todas as origens</option>
+              <option value={LEAD_SOURCE_FILTER_WITHOUT_SOURCE}>Sem origem</option>
+              {sourceOptions.map((source) => (
+                <option key={source.value} value={getLeadSourceFilterValue(source.value)}>
+                  {source.label}
                 </option>
               ))}
             </select>
@@ -103,6 +163,53 @@ const LeadsWorkspaceToolbar = ({
               ))}
             </select>
           </label>
+
+          <label className="space-y-2 text-sm">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Periodo</span>
+            <select
+              value={periodFilter}
+              onChange={(event) => onPeriodFilterChange(event.target.value as LeadPeriodFilter)}
+              className="h-10 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="all">Todo o historico</option>
+              <option value="today">Hoje</option>
+              <option value="7d">Ultimos 7 dias</option>
+              <option value="30d">Ultimos 30 dias</option>
+              <option value="90d">Ultimos 90 dias</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="space-y-2 text-sm sm:min-w-[220px]">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Ordenacao</span>
+            <select
+              value={sortOption}
+              onChange={(event) => onSortOptionChange(event.target.value as LeadSortOption)}
+              className="h-10 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="priority">Prioridade operacional</option>
+              <option value="next_follow_up">Proximo follow-up</option>
+              <option value="newest">Entrada mais recente</option>
+              <option value="oldest">Entrada mais antiga</option>
+              <option value="name_asc">Nome A-Z</option>
+            </select>
+          </label>
+
+          <div className="rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recorte atual</p>
+            <p className="mt-1 text-sm font-medium text-foreground">{visibleLeads} leads visiveis</p>
+            <p className="text-xs text-muted-foreground">
+              {hasActiveFilters ? "Busca e filtros aplicados na operacao." : "Nenhum filtro adicional ativo."}
+            </p>
+          </div>
+
+          <Button type="button" variant="outline" onClick={onClearFilters} disabled={!hasActiveFilters}>
+            <RotateCcw className="h-4 w-4" />
+            Limpar filtros
+          </Button>
         </div>
 
         <div className="inline-flex rounded-2xl border border-border bg-muted/20 p-1">

@@ -67,3 +67,8 @@ export interface CrmOwnerOption {
   displayLabel: string;
   selectLabel: string;
 }
+
+export interface CrmSourceOption {
+  value: string;
+  label: string;
+}
