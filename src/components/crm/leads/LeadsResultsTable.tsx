@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, CalendarClock } from "lucide-react";
 import LeadStageBadge from "@/components/crm/LeadStageBadge";
-import { LeadTaskStatusSummary, formatTaskDueDate, getOwnerDisplayLabel } from "@/lib/crmLeadPresentation";
+import {
+  LeadTaskStatusSummary,
+  formatTaskDueDate,
+  getLeadOperationalPriority,
+  getLeadSourceLabel,
+  getOwnerDisplayLabel,
+} from "@/lib/crmLeadPresentation";
 import { CrmLead } from "@/types/crm";
 import { cn } from "@/utils/cn";
 
@@ -23,18 +29,22 @@ const LeadsResultsTable = ({ items, currentUserId, ownerLabelMap }: LeadsResults
         <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           <tr>
             <th className="px-5 py-4">Lead</th>
-            <th className="px-5 py-4">Etapa</th>
+            <th className="px-5 py-4">Contexto</th>
             <th className="px-5 py-4">Responsavel</th>
             <th className="px-5 py-4">Pendencias</th>
-            <th className="px-5 py-4">Entrada</th>
+            <th className="px-5 py-4">Janela</th>
             <th className="px-5 py-4 text-right">Acao</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {items.map(({ lead, taskSummary }) => (
+          {items.map(({ lead, taskSummary }) => {
+            const priority = getLeadOperationalPriority({ lead, taskSummary });
+
+            return (
             <tr key={lead.id} className="align-top transition-colors hover:bg-muted/20">
               <td className="px-5 py-4">
-                <div className="space-y-1">
+                <div className="space-y-2">
+                  <PriorityPill label={priority.label} tone={priority.tone} />
                   <p className="font-semibold text-foreground">{lead.nome || "Lead sem nome"}</p>
                   <p className="text-sm text-muted-foreground">{lead.empresa || "Empresa nao informada"}</p>
                   <p className="text-xs text-muted-foreground">
@@ -46,8 +56,9 @@ const LeadsResultsTable = ({ items, currentUserId, ownerLabelMap }: LeadsResults
                 <div className="space-y-2">
                   <LeadStageBadge lead={lead} />
                   <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                    {lead.origem || "Origem nao informada"}
+                    {getLeadSourceLabel(lead.origem)}
                   </p>
+                  <p className="text-xs text-muted-foreground">{priority.helper}</p>
                 </div>
               </td>
               <td className="px-5 py-4">
@@ -79,14 +90,19 @@ const LeadsResultsTable = ({ items, currentUserId, ownerLabelMap }: LeadsResults
                 </div>
               </td>
               <td className="px-5 py-4">
-                <div className="space-y-1 text-sm">
-                  <p className="font-medium text-foreground">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(lead.created_at).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Entrada</p>
+                    <p className="mt-1 font-medium text-foreground">
+                      {new Date(lead.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Ultima atividade</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {new Date(lead.last_interaction_at || lead.updated_at || lead.created_at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
                 </div>
               </td>
               <td className="px-5 py-4 text-right">
@@ -99,7 +115,8 @@ const LeadsResultsTable = ({ items, currentUserId, ownerLabelMap }: LeadsResults
                 </Link>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -117,6 +134,29 @@ const TaskPill = ({ label, danger }: { label: string; danger?: boolean }) => {
       )}
     >
       {danger ? <AlertCircle className="h-3.5 w-3.5" /> : null}
+      {label}
+    </span>
+  );
+};
+
+const PriorityPill = ({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: "danger" | "warning" | "success" | "neutral" | "muted";
+}) => {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
+        tone === "danger" && "border-destructive/20 bg-destructive/10 text-destructive",
+        tone === "warning" && "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+        tone === "success" && "border-secondary/20 bg-secondary/10 text-secondary",
+        tone === "neutral" && "border-primary/20 bg-primary/10 text-primary",
+        tone === "muted" && "border-border bg-muted/30 text-muted-foreground",
+      )}
+    >
       {label}
     </span>
   );
