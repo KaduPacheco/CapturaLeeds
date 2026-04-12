@@ -1,60 +1,66 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
-// Mock do contexto de autenticação usando caminho relativo
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
 import { useAuth } from '../../contexts/AuthContext';
 
-describe('ProtectedRoute - Segurança de Rota', () => {
-  it('deve exibir o Spinner quando estiver carregando a sessão', () => {
-    (useAuth as any).mockReturnValue({ session: null, loading: true });
+describe('ProtectedRoute - Seguranca de Rota', () => {
+  const mockedUseAuth = vi.mocked(useAuth);
+
+  it('deve exibir o Spinner quando estiver carregando a sessao', () => {
+    mockedUseAuth.mockReturnValue({ session: null, loading: true, user: null, signOut: vi.fn() });
 
     render(
       <MemoryRouter>
         <ProtectedRoute />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const spinner = document.querySelector('.animate-spin');
     expect(spinner).toBeInTheDocument();
   });
 
-  it('deve permitir acesso (\'Outlet\') quando houver sessão ativa', async () => {
-    (useAuth as any).mockReturnValue({ session: { user: {} }, loading: false });
+  it("deve permitir acesso ('Outlet') quando houver sessao ativa", async () => {
+    mockedUseAuth.mockReturnValue({
+      session: { user: {} } as never,
+      loading: false,
+      user: null,
+      signOut: vi.fn(),
+    });
 
     const { getByText } = render(
       <MemoryRouter initialEntries={['/protected']}>
         <Routes>
           <Route element={<ProtectedRoute />}>
-            <Route path="/protected" element={<div>Conteúdo Privado</div>} />
+            <Route path="/protected" element={<div>Conteudo Privado</div>} />
           </Route>
         </Routes>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
-    expect(getByText('Conteúdo Privado')).toBeInTheDocument();
+    expect(getByText('Conteudo Privado')).toBeInTheDocument();
   });
 
-  it('deve redirecionar para login quando não houver sessão', () => {
-    (useAuth as any).mockReturnValue({ session: null, loading: false });
+  it('deve redirecionar para login quando nao houver sessao', () => {
+    mockedUseAuth.mockReturnValue({ session: null, loading: false, user: null, signOut: vi.fn() });
 
     const { getByText, queryByText } = render(
       <MemoryRouter initialEntries={['/protected']}>
         <Routes>
           <Route element={<ProtectedRoute />}>
-            <Route path="/protected" element={<div>Conteúdo Privado</div>} />
+            <Route path="/protected" element={<div>Conteudo Privado</div>} />
           </Route>
-          <Route path="/crm/login" element={<div>Página de Login</div>} />
+          <Route path="/crm/login" element={<div>Pagina de Login</div>} />
         </Routes>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
-    expect(getByText('Página de Login')).toBeInTheDocument();
-    expect(queryByText('Conteúdo Privado')).not.toBeInTheDocument();
+    expect(getByText('Pagina de Login')).toBeInTheDocument();
+    expect(queryByText('Conteudo Privado')).not.toBeInTheDocument();
   });
 });

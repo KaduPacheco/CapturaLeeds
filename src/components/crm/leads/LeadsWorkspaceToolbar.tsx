@@ -1,5 +1,15 @@
 import { KanbanSquare, LayoutList, ListFilter, Users } from "lucide-react";
-import { LeadResponsibilityFilter, LeadsViewMode, LeadStageFilter, PIPELINE_STAGE_OPTIONS } from "@/lib/crmLeadPresentation";
+import {
+  LEAD_OWNER_FILTER_ALL,
+  LEAD_OWNER_FILTER_MINE,
+  LEAD_OWNER_FILTER_UNASSIGNED,
+  LeadOwnerFilter,
+  LeadsViewMode,
+  LeadStageFilter,
+  PIPELINE_STAGE_OPTIONS,
+  getOwnerFilterValueForId,
+} from "@/lib/crmLeadPresentation";
+import { CrmOwnerOption } from "@/types/crm";
 import { cn } from "@/utils/cn";
 
 interface LeadsWorkspaceToolbarProps {
@@ -8,10 +18,11 @@ interface LeadsWorkspaceToolbarProps {
   overdueLeads: number;
   unassignedLeads: number;
   stageFilter: LeadStageFilter;
-  responsibilityFilter: LeadResponsibilityFilter;
+  ownerFilter: LeadOwnerFilter;
+  ownerOptions: CrmOwnerOption[];
   viewMode: LeadsViewMode;
   onStageFilterChange: (value: LeadStageFilter) => void;
-  onResponsibilityFilterChange: (value: LeadResponsibilityFilter) => void;
+  onOwnerFilterChange: (value: LeadOwnerFilter) => void;
   onViewModeChange: (value: LeadsViewMode) => void;
 }
 
@@ -21,10 +32,11 @@ const LeadsWorkspaceToolbar = ({
   overdueLeads,
   unassignedLeads,
   stageFilter,
-  responsibilityFilter,
+  ownerFilter,
+  ownerOptions,
   viewMode,
   onStageFilterChange,
-  onResponsibilityFilterChange,
+  onOwnerFilterChange,
   onViewModeChange,
 }: LeadsWorkspaceToolbarProps) => {
   return (
@@ -77,14 +89,18 @@ const LeadsWorkspaceToolbar = ({
           <label className="space-y-2 text-sm">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Responsavel</span>
             <select
-              value={responsibilityFilter}
-              onChange={(event) => onResponsibilityFilterChange(event.target.value as LeadResponsibilityFilter)}
+              value={ownerFilter}
+              onChange={(event) => onOwnerFilterChange(event.target.value as LeadOwnerFilter)}
               className="h-10 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
             >
-              <option value="all">Todos os leads</option>
-              <option value="mine">Meus leads</option>
-              <option value="assigned">Com responsavel</option>
-              <option value="unassigned">Sem responsavel</option>
+              <option value={LEAD_OWNER_FILTER_ALL}>Todos os responsaveis</option>
+              <option value={LEAD_OWNER_FILTER_MINE}>Sob minha responsabilidade</option>
+              <option value={LEAD_OWNER_FILTER_UNASSIGNED}>Sem responsavel</option>
+              {ownerOptions.map((owner) => (
+                <option key={owner.id} value={getOwnerFilterValueForId(owner.id)}>
+                  {owner.selectLabel}
+                </option>
+              ))}
             </select>
           </label>
         </div>

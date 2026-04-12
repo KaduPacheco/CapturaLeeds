@@ -8,11 +8,15 @@ import LeadsWorkspaceToolbar from "@/components/crm/leads/LeadsWorkspaceToolbar"
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  LeadResponsibilityFilter,
+  LEAD_OWNER_FILTER_ALL,
+  LeadOwnerFilter,
   LeadsViewMode,
   LeadStageFilter,
   buildLeadTaskSummary,
+  buildOwnerLabelMap,
+  buildOwnerOptions,
   getLeadStageValue,
+  matchesOwnerFilter,
 } from "@/lib/crmLeadPresentation";
 import { getCrmLeads, getLeadTasksOverview } from "@/services/crmService";
 import { CrmLeadTaskOverview } from "@/types/crm";
@@ -20,7 +24,7 @@ import { CrmLeadTaskOverview } from "@/types/crm";
 const LeadsPage = () => {
   const { user } = useAuth();
   const [stageFilter, setStageFilter] = useState<LeadStageFilter>("all");
-  const [responsibilityFilter, setResponsibilityFilter] = useState<LeadResponsibilityFilter>("all");
+  const [ownerFilter, setOwnerFilter] = useState<LeadOwnerFilter>(LEAD_OWNER_FILTER_ALL);
   const [viewMode, setViewMode] = useState<LeadsViewMode>("list");
 
   const leadsQuery = useQuery({
@@ -56,17 +60,15 @@ const LeadsPage = () => {
           ? getLeadStageValue(lead) === "without_stage"
           : getLeadStageValue(lead) === stageFilter;
 
-      const matchesResponsibility = responsibilityFilter === "all"
-        ? true
-        : responsibilityFilter === "mine"
-          ? Boolean(user?.id) && lead.owner_id === user.id
-          : responsibilityFilter === "assigned"
-            ? Boolean(lead.owner_id)
-            : !lead.owner_id;
-
-      return matchesStage && matchesResponsibility;
+      return matchesStage && matchesOwnerFilter(lead.owner_id, ownerFilter, user?.id);
     });
-  }, [leadRows, responsibilityFilter, stageFilter, user?.id]);
+  }, [leadRows, ownerFilter, stageFilter, user?.id]);
+
+  const ownerOptions = useMemo(
+    () => buildOwnerOptions(leadRows.map(({ lead }) => lead.owner_id), user),
+    [leadRows, user],
+  );
+  const ownerLabelMap = useMemo(() => buildOwnerLabelMap(ownerOptions), [ownerOptions]);
 
   const overdueLeads = filteredRows.filter(({ taskSummary }) => taskSummary.overdueCount > 0).length;
   const unassignedLeads = leadRows.filter(({ lead }) => !lead.owner_id).length;
@@ -123,10 +125,11 @@ const LeadsPage = () => {
         overdueLeads={overdueLeads}
         unassignedLeads={unassignedLeads}
         stageFilter={stageFilter}
-        responsibilityFilter={responsibilityFilter}
+        ownerFilter={ownerFilter}
+        ownerOptions={ownerOptions}
         viewMode={viewMode}
         onStageFilterChange={setStageFilter}
-        onResponsibilityFilterChange={setResponsibilityFilter}
+        onOwnerFilterChange={setOwnerFilter}
         onViewModeChange={setViewMode}
       />
 
@@ -145,9 +148,9 @@ const LeadsPage = () => {
           </p>
         </div>
       ) : viewMode === "list" ? (
-        <LeadsResultsTable items={filteredRows} currentUserId={user?.id} />
+        <LeadsResultsTable items={filteredRows} currentUserId={user?.id} ownerLabelMap={ownerLabelMap} />
       ) : (
-        <LeadsKanbanBoard items={filteredRows} currentUserId={user?.id} />
+        <LeadsKanbanBoard items={filteredRows} currentUserId={user?.id} ownerLabelMap={ownerLabelMap} />
       )}
     </div>
   );

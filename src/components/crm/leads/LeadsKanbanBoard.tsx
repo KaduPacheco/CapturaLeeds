@@ -13,6 +13,7 @@ interface LeadWithSummary {
 interface LeadsKanbanBoardProps {
   items: LeadWithSummary[];
   currentUserId?: string;
+  ownerLabelMap?: ReadonlyMap<string, string>;
 }
 
 const stageColumns: Array<{ key: PipelineStage | "without_stage"; title: string; helper: string }> = [
@@ -24,7 +25,7 @@ const stageColumns: Array<{ key: PipelineStage | "without_stage"; title: string;
   { key: "without_stage", title: "Sem etapa", helper: "Leads que ainda precisam ser classificados" },
 ];
 
-const LeadsKanbanBoard = ({ items, currentUserId }: LeadsKanbanBoardProps) => {
+const LeadsKanbanBoard = ({ items, currentUserId, ownerLabelMap }: LeadsKanbanBoardProps) => {
   return (
     <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
       {stageColumns.map((column) => {
@@ -58,7 +59,7 @@ const LeadsKanbanBoard = ({ items, currentUserId }: LeadsKanbanBoardProps) => {
                       </div>
 
                       <div className="space-y-1 text-xs text-muted-foreground">
-                        <p>Responsavel: {getOwnerDisplayLabel(lead.owner_id, currentUserId)}</p>
+                        <p>Responsavel: {getOwnerDisplayLabel(lead.owner_id, currentUserId, ownerLabelMap)}</p>
                         <p>Origem: {lead.origem || "Nao informada"}</p>
                         <p>{taskSummary.openCount} follow-ups abertos - {taskSummary.overdueCount} vencidos</p>
                       </div>

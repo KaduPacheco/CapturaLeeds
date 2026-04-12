@@ -13,9 +13,10 @@ export interface LeadWithSummary {
 interface LeadsResultsTableProps {
   items: LeadWithSummary[];
   currentUserId?: string;
+  ownerLabelMap?: ReadonlyMap<string, string>;
 }
 
-const LeadsResultsTable = ({ items, currentUserId }: LeadsResultsTableProps) => {
+const LeadsResultsTable = ({ items, currentUserId, ownerLabelMap }: LeadsResultsTableProps) => {
   return (
     <div className="overflow-x-auto rounded-[28px] border border-border/70 bg-card shadow-sm">
       <table className="min-w-full text-left text-sm">
@@ -51,7 +52,9 @@ const LeadsResultsTable = ({ items, currentUserId }: LeadsResultsTableProps) => 
               </td>
               <td className="px-5 py-4">
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground">{getOwnerDisplayLabel(lead.owner_id, currentUserId)}</p>
+                  <p className="font-medium text-foreground">
+                    {getOwnerDisplayLabel(lead.owner_id, currentUserId, ownerLabelMap)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {lead.owner_id ? "Lead com ownership definido" : "Disponivel para assumir"}
                   </p>

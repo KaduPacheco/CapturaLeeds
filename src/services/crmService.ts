@@ -25,6 +25,25 @@ export async function getCrmLeads(): Promise<CrmLead[]> {
   return (data ?? []) as CrmLead[];
 }
 
+export async function getCrmOwnerIds(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("owner_id")
+    .not("owner_id", "is", null);
+
+  if (error) {
+    throw new Error(`Falha ao buscar owners do CRM: ${error.message}`);
+  }
+
+  return Array.from(
+    new Set(
+      (data ?? [])
+        .map((record) => record.owner_id)
+        .filter((ownerId): ownerId is string => typeof ownerId === "string" && ownerId.trim().length > 0),
+    ),
+  );
+}
+
 export async function getCrmLeadById(id: string): Promise<CrmLead> {
   const { data, error } = await supabase
     .from("leads")
@@ -204,7 +223,14 @@ export async function updateLeadPipelineStage(leadId: string, nextStage: Pipelin
   return data as CrmLead;
 }
 
-export async function updateLeadOwner(leadId: string, nextOwnerId: string | null) {
+export async function updateLeadOwner(
+  leadId: string,
+  nextOwnerId: string | null,
+  options?: {
+    previousOwnerLabel?: string;
+    nextOwnerLabel?: string;
+  },
+) {
   const currentLead = await getLeadOwnerLookup(leadId);
 
   const { data, error } = await supabase
@@ -225,6 +251,8 @@ export async function updateLeadOwner(leadId: string, nextOwnerId: string | null
     await logLeadEvent(leadId, "owner_changed", {
       previous_owner_id: currentLead.owner_id,
       next_owner_id: nextOwnerId,
+      previous_owner_label: options?.previousOwnerLabel ?? null,
+      next_owner_label: options?.nextOwnerLabel ?? null,
     });
   }
 

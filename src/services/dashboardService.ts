@@ -339,6 +339,8 @@ function getEventTitle(eventType: string) {
       return "Status atualizado";
     case "pipeline_change":
       return "Estagio atualizado";
+    case "owner_changed":
+      return "Ownership ajustado";
     default:
       return toTitleCase(eventType);
   }
@@ -348,6 +350,11 @@ function getEventDescription(event: DashboardEventRecord) {
   const taskTitle = getPayloadString(event.payload, "title");
   const contentPreview = getPayloadString(event.payload, "content_preview");
   const nextStatus = getPayloadString(event.payload, "to");
+  const previousStage = getPayloadString(event.payload, "previous_stage");
+  const nextStage = getPayloadString(event.payload, "next_stage");
+  const previousOwnerLabel = getPayloadString(event.payload, "previous_owner_label");
+  const nextOwnerLabel = getPayloadString(event.payload, "next_owner_label");
+  const nextOwnerId = getPayloadString(event.payload, "next_owner_id");
 
   switch (event.event_type) {
     case "lead_created":
@@ -361,8 +368,31 @@ function getEventDescription(event: DashboardEventRecord) {
     case "task_reopened":
       return taskTitle ? `Tarefa reaberta: ${taskTitle}` : "Uma tarefa voltou para a fila de execucao.";
     case "status_change":
-    case "pipeline_change":
       return nextStatus ? `Novo estado registrado: ${toTitleCase(nextStatus)}` : "Houve atualizacao no status comercial.";
+    case "pipeline_change":
+      if (previousStage && nextStage) {
+        return `${toTitleCase(previousStage)} -> ${toTitleCase(nextStage)}`;
+      }
+
+      if (nextStage) {
+        return `Lead classificado em ${toTitleCase(nextStage)}.`;
+      }
+
+      return "Houve atualizacao no pipeline comercial.";
+    case "owner_changed":
+      if (previousOwnerLabel && nextOwnerLabel) {
+        return `${previousOwnerLabel} -> ${nextOwnerLabel}`;
+      }
+
+      if (nextOwnerLabel) {
+        return `Lead atribuido para ${nextOwnerLabel}.`;
+      }
+
+      if (nextOwnerId) {
+        return `Lead atribuido para responsavel ${nextOwnerId.slice(0, 8)}.`;
+      }
+
+      return "Ownership atualizado para fila sem responsavel.";
     default:
       return "Atividade registrada automaticamente pelo CRM.";
   }

@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildLeadTaskSummary, getLeadStageValue } from "../crmLeadPresentation";
+import {
+  LEAD_OWNER_FILTER_MINE,
+  LEAD_OWNER_FILTER_UNASSIGNED,
+  buildLeadTaskSummary,
+  buildOwnerLabelMap,
+  buildOwnerOptions,
+  getLeadStageValue,
+  getOwnerFilterValueForId,
+  matchesOwnerFilter,
+} from "../crmLeadPresentation";
 
 describe("crmLeadPresentation", () => {
   it("normalizes the commercial stage using pipeline_stage first", () => {
@@ -51,5 +60,43 @@ describe("crmLeadPresentation", () => {
     );
 
     vi.useRealTimers();
+  });
+
+  it("builds owner options with current user first and stable labels", () => {
+    const ownerOptions = buildOwnerOptions(
+      ["owner-b", "owner-a", "user-1", "owner-a", null],
+      {
+        id: "user-1",
+        email: "ana@empresa.com",
+        user_metadata: { full_name: "Ana Souza" },
+      } as never,
+    );
+
+    expect(ownerOptions).toEqual([
+      {
+        id: "user-1",
+        displayLabel: "Voce",
+        selectLabel: "Voce (Ana Souza)",
+      },
+      {
+        id: "owner-a",
+        displayLabel: "Responsavel owner-a",
+        selectLabel: "Responsavel owner-a",
+      },
+      {
+        id: "owner-b",
+        displayLabel: "Responsavel owner-b",
+        selectLabel: "Responsavel owner-b",
+      },
+    ]);
+
+    expect(buildOwnerLabelMap(ownerOptions).get("user-1")).toBe("Voce");
+  });
+
+  it("matches mine, unassigned and specific owner filters", () => {
+    expect(matchesOwnerFilter("user-1", LEAD_OWNER_FILTER_MINE, "user-1")).toBe(true);
+    expect(matchesOwnerFilter(null, LEAD_OWNER_FILTER_UNASSIGNED, "user-1")).toBe(true);
+    expect(matchesOwnerFilter("owner-2", getOwnerFilterValueForId("owner-2"), "user-1")).toBe(true);
+    expect(matchesOwnerFilter("owner-3", getOwnerFilterValueForId("owner-2"), "user-1")).toBe(false);
   });
 });

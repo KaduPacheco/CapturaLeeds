@@ -61,3 +61,9 @@ export interface CrmLeadTaskOverview {
   due_date: string;
   completed: boolean;
 }
+
+export interface CrmOwnerOption {
+  id: string;
+  displayLabel: string;
+  selectLabel: string;
+}

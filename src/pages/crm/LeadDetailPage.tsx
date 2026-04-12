@@ -22,6 +22,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   PIPELINE_STAGE_OPTIONS,
   buildLeadTaskSummary,
+  buildOwnerLabelMap,
+  buildOwnerOptions,
   formatTaskDueDate,
   getLeadStageValue,
   getLeadStageOptionLabel,
@@ -31,6 +33,7 @@ import {
   createLeadNote,
   createLeadTask,
   getCrmLeadById,
+  getCrmOwnerIds,
   getLeadEvents,
   getLeadNotes,
   getLeadTasks,
@@ -65,6 +68,12 @@ const LeadDetailPage = () => {
   const leadQuery = useQuery({
     queryKey: ["crm-lead", id],
     queryFn: () => getCrmLeadById(id!),
+    enabled: Boolean(id),
+  });
+
+  const ownerIdsQuery = useQuery({
+    queryKey: ["crm-owner-ids"],
+    queryFn: getCrmOwnerIds,
     enabled: Boolean(id),
   });
 
@@ -130,18 +139,29 @@ const LeadDetailPage = () => {
   });
 
   const ownerMutation = useMutation({
-    mutationFn: (nextOwnerId: string | null) => updateLeadOwner(id!, nextOwnerId),
-    onSuccess: (_, nextOwnerId) => {
+    mutationFn: ({
+      nextOwnerId,
+      previousOwnerLabel,
+      nextOwnerLabel,
+    }: {
+      nextOwnerId: string | null;
+      previousOwnerLabel?: string;
+      nextOwnerLabel?: string;
+    }) => updateLeadOwner(id!, nextOwnerId, { previousOwnerLabel, nextOwnerLabel }),
+    onSuccess: (_, variables) => {
       invalidateLeadWorkspace(queryClient, id);
       queryClient.invalidateQueries({ queryKey: ["crm-leads"] });
-      toast({ title: nextOwnerId ? "Lead atribuido" : "Ownership removido" });
+      queryClient.invalidateQueries({ queryKey: ["crm-owner-ids"] });
+      toast({ title: variables.nextOwnerId ? "Lead atribuido" : "Ownership removido" });
     },
   });
 
   const taskSummary = useMemo(() => buildLeadTaskSummary(tasksQuery.data ?? []), [tasksQuery.data]);
+  const ownerOptions = useMemo(() => buildOwnerOptions(ownerIdsQuery.data ?? [], user), [ownerIdsQuery.data, user]);
+  const ownerLabelMap = useMemo(() => buildOwnerLabelMap(ownerOptions), [ownerOptions]);
   const timelineItems = useMemo(
-    () => buildTimelineItems(notesQuery.data ?? [], eventsQuery.data ?? []),
-    [eventsQuery.data, notesQuery.data],
+    () => buildTimelineItems(notesQuery.data ?? [], eventsQuery.data ?? [], ownerLabelMap, user?.id),
+    [eventsQuery.data, notesQuery.data, ownerLabelMap, user?.id],
   );
 
   const handleAddNote = (event: React.FormEvent<HTMLFormElement>) => {
@@ -165,6 +185,8 @@ const LeadDetailPage = () => {
   const lead = leadQuery.data;
   const tasks = tasksQuery.data ?? [];
   const currentStage = getLeadStageValue(lead ?? { pipeline_stage: null, status: "novo" });
+  const currentOwnerLabel = getOwnerDisplayLabel(lead?.owner_id ?? null, user?.id, ownerLabelMap);
+  const selectedStageValue = currentStage === "without_stage" ? "" : currentStage;
 
   if (leadQuery.isLoading) {
     return (
@@ -206,9 +228,17 @@ const LeadDetailPage = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Responsavel atual</p>
-          <p className="mt-2 text-sm font-medium text-foreground">{getOwnerDisplayLabel(lead.owner_id, user?.id)}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Etapa atual</p>
+            <div className="mt-2">
+              <LeadStageBadge lead={lead} className="text-[10px]" />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Responsavel atual</p>
+            <p className="mt-2 text-sm font-medium text-foreground">{currentOwnerLabel}</p>
+          </div>
         </div>
       </div>
 
@@ -230,7 +260,7 @@ const LeadDetailPage = () => {
               <Field label="Origem" value={lead.origem || "Nao informada"} />
               <Field label="Porte" value={lead.funcionarios ? `${lead.funcionarios} funcionarios` : "Nao informado"} />
               <Field label="Criado em" value={new Date(lead.created_at).toLocaleString("pt-BR")} />
-              <Field label="Responsavel" value={getOwnerDisplayLabel(lead.owner_id, user?.id)} />
+              <Field label="Responsavel" value={currentOwnerLabel} />
             </div>
           </section>
 
@@ -247,14 +277,38 @@ const LeadDetailPage = () => {
 
             <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr),280px]">
               <div className="space-y-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <OperationalSummaryCard
+                    label="Estagio vigente"
+                    value={currentStage === "without_stage" ? "Sem etapa" : getLeadStageOptionLabel(currentStage)}
+                    helper="Toda mudanca fica registrada na timeline do lead."
+                    tone={currentStage === "without_stage" ? "danger" : "neutral"}
+                  />
+                  <OperationalSummaryCard
+                    label="Ownership vigente"
+                    value={currentOwnerLabel}
+                    helper={lead.owner_id ? "Responsavel definido para conduzir o lead." : "Lead disponivel para distribuicao."}
+                    tone={lead.owner_id ? "neutral" : "danger"}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Etapa atual</label>
                   <select
-                    value={currentStage === "without_stage" ? "novo" : currentStage}
-                    onChange={(event) => stageMutation.mutate(event.target.value as PipelineStage)}
+                    value={selectedStageValue}
+                    onChange={(event) => {
+                      if (!event.target.value) {
+                        return;
+                      }
+
+                      stageMutation.mutate(event.target.value as PipelineStage);
+                    }}
                     disabled={stageMutation.isPending}
                     className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
                   >
+                    <option value="" disabled>
+                      Sem etapa definida
+                    </option>
                     {PIPELINE_STAGE_OPTIONS.map((stage) => (
                       <option key={stage.value} value={stage.value}>
                         {stage.label}
@@ -262,35 +316,52 @@ const LeadDetailPage = () => {
                     ))}
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    {PIPELINE_STAGE_OPTIONS.find((stage) => stage.value === (currentStage === "without_stage" ? "novo" : currentStage))?.description}
+                    {currentStage === "without_stage"
+                      ? "Este lead ainda nao foi classificado no funil comercial."
+                      : PIPELINE_STAGE_OPTIONS.find((stage) => stage.value === currentStage)?.description}
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Ownership</p>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant={lead.owner_id === user?.id ? "secondary" : "default"}
-                      onClick={() => ownerMutation.mutate(user?.id ?? null)}
-                      disabled={!user?.id || ownerMutation.isPending}
-                    >
-                      {lead.owner_id === user?.id ? "Sob sua responsabilidade" : "Assumir lead"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => ownerMutation.mutate(null)}
-                      disabled={!lead.owner_id || ownerMutation.isPending}
-                    >
-                      Remover responsavel
-                    </Button>
-                  </div>
+                  <select
+                    value={lead.owner_id ?? ""}
+                    onChange={(event) => {
+                      const nextOwnerId = event.target.value || null;
+
+                      if (nextOwnerId === lead.owner_id) {
+                        return;
+                      }
+
+                      const nextOwnerOption = ownerOptions.find((option) => option.id === nextOwnerId);
+
+                      ownerMutation.mutate({
+                        nextOwnerId,
+                        previousOwnerLabel: lead.owner_id ? currentOwnerLabel : undefined,
+                        nextOwnerLabel: nextOwnerOption?.displayLabel,
+                      });
+                    }}
+                    disabled={ownerMutation.isPending}
+                    className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
+                  >
+                    <option value="">Sem responsavel</option>
+                    {ownerOptions.map((ownerOption) => (
+                      <option key={ownerOption.id} value={ownerOption.id}>
+                        {ownerOption.selectLabel}
+                      </option>
+                    ))}
+                  </select>
                   <p className="text-sm text-muted-foreground">
                     {lead.owner_id
-                      ? `Responsavel atual: ${getOwnerDisplayLabel(lead.owner_id, user?.id)}`
+                      ? `Responsavel atual: ${currentOwnerLabel}`
                       : "Este lead ainda nao possui ownership definido."}
                   </p>
+                  {ownerIdsQuery.isError ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      A lista de responsaveis esta operando em modo reduzido. Sem uma tabela publica de perfis no backend,
+                      o CRM usa apenas owners ja vistos nos leads e o usuario autenticado atual.
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -455,7 +526,7 @@ const LeadDetailPage = () => {
             <div className="mt-4 space-y-3">
               <OperationalSummaryCard
                 label="Ownership"
-                value={getOwnerDisplayLabel(lead.owner_id, user?.id)}
+                value={currentOwnerLabel}
                 helper={lead.owner_id ? "Lead atribuido a uma pessoa responsavel." : "Ainda disponivel para distribuicao."}
                 tone={lead.owner_id ? "neutral" : "danger"}
               />
@@ -505,7 +576,12 @@ function OperationalSummaryCard({
   );
 }
 
-function buildTimelineItems(notes: CrmLeadNote[], events: CrmLeadEvent[]): TimelineItem[] {
+function buildTimelineItems(
+  notes: CrmLeadNote[],
+  events: CrmLeadEvent[],
+  ownerLabelMap: ReadonlyMap<string, string>,
+  currentUserId?: string,
+): TimelineItem[] {
   const noteItems: TimelineItem[] = notes.map((note) => ({
     id: note.id,
     kind: "note",
@@ -520,7 +596,7 @@ function buildTimelineItems(notes: CrmLeadNote[], events: CrmLeadEvent[]): Timel
     id: event.id,
     kind: "event",
     title: getEventTitle(event),
-    content: getEventDescription(event),
+    content: getEventDescription(event, ownerLabelMap, currentUserId),
     createdAt: event.created_at,
     tone: getEventTone(event.event_type),
     icon: getEventIcon(event.event_type),
@@ -550,7 +626,11 @@ function getEventTitle(event: CrmLeadEvent) {
   }
 }
 
-function getEventDescription(event: CrmLeadEvent) {
+function getEventDescription(
+  event: CrmLeadEvent,
+  ownerLabelMap: ReadonlyMap<string, string>,
+  currentUserId?: string,
+) {
   switch (event.event_type) {
     case "task_added":
     case "task_completed":
@@ -571,8 +651,34 @@ function getEventDescription(event: CrmLeadEvent) {
       return undefined;
     }
     case "owner_changed": {
-      const nextOwner = getPayloadString(event.payload, "next_owner_id");
-      return nextOwner ? `Lead atribuido a ${nextOwner.slice(0, 8)}.` : "Lead voltou para fila sem responsavel.";
+      const previousOwnerLabel = getOwnerLabelFromPayload(
+        event.payload,
+        "previous_owner_label",
+        "previous_owner_id",
+        ownerLabelMap,
+        currentUserId,
+      );
+      const nextOwnerLabel = getOwnerLabelFromPayload(
+        event.payload,
+        "next_owner_label",
+        "next_owner_id",
+        ownerLabelMap,
+        currentUserId,
+      );
+
+      if (!previousOwnerLabel && nextOwnerLabel) {
+        return `Lead atribuido para ${nextOwnerLabel}.`;
+      }
+
+      if (previousOwnerLabel && nextOwnerLabel) {
+        return `${previousOwnerLabel} -> ${nextOwnerLabel}`;
+      }
+
+      if (previousOwnerLabel) {
+        return `${previousOwnerLabel} removido; lead voltou para fila sem responsavel.`;
+      }
+
+      return "Ownership atualizado.";
     }
     case "note_added":
       return getPayloadString(event.payload, "content_preview") || undefined;
@@ -631,6 +737,24 @@ function getStageLabelFromPayload(value: string) {
   }
 
   return value;
+}
+
+function getOwnerLabelFromPayload(
+  payload: Record<string, unknown>,
+  labelKey: string,
+  idKey: string,
+  ownerLabelMap: ReadonlyMap<string, string>,
+  currentUserId?: string,
+) {
+  const explicitLabel = getPayloadString(payload, labelKey);
+
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  const ownerId = getPayloadString(payload, idKey);
+
+  return ownerId ? getOwnerDisplayLabel(ownerId, currentUserId, ownerLabelMap) : "";
 }
 
 function invalidateLeadWorkspace(queryClient: ReturnType<typeof useQueryClient>, leadId?: string) {
