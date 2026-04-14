@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/infra/supabase/client";
+import { useAuth } from "@/features/crm/auth/hooks/useAuth";
+import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/hooks/useToast";
@@ -19,12 +20,12 @@ const LoginPage = () => {
   // Se já houver sessão, redireciona para longe do login
   useEffect(() => {
     if (session) {
-      navigate("/crm", { replace: true });
+      navigate(CRM_ROUTES.root, { replace: true });
     }
   }, [session, navigate]);
 
   // Rota de onde o usuário veio, ou dashboard por padrão
-  const from = location.state?.from?.pathname || "/crm";
+  const from = location.state?.from?.pathname || CRM_ROUTES.root;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

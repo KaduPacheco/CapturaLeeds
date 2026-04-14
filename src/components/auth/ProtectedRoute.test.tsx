@@ -3,11 +3,11 @@ import { render } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
-vi.mock("../../hooks/useAuth", () => ({
+vi.mock("../../features/crm/auth/hooks/useAuth", () => ({
   useAuth: vi.fn(),
 }));
 
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../features/crm/auth/hooks/useAuth";
 
 describe("ProtectedRoute - Seguranca de Rota", () => {
   const mockedUseAuth = vi.mocked(useAuth);

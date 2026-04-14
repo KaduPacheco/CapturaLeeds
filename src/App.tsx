@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
 import { TooltipProvider } from "./components/ui/Tooltip";
@@ -7,15 +8,14 @@ import NotFoundPage from "./pages/NotFoundPage";
 
 // Rotas CRM (Isoladas)
 import CrmLayout from "./components/layout/CrmLayout";
-import DashboardPage from "./pages/crm/DashboardPage";
-import LoginPage from "./pages/crm/LoginPage";
-import LeadsPage from "./pages/crm/LeadsPage";
-import LeadDetailPage from "./pages/crm/LeadDetailPage";
-
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./features/crm/auth/providers/AuthProvider";
+import ProtectedRoute from "./features/crm/auth/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
+const LoginPage = lazy(() => import("./pages/crm/LoginPage"));
+const DashboardPage = lazy(() => import("./pages/crm/DashboardPage"));
+const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
+const LeadDetailPage = lazy(() => import("./pages/crm/LeadDetailPage"));
 
 const App = () => {
   return (
@@ -29,12 +29,12 @@ const App = () => {
             {/* Contexto de CRM (Isolado) */}
             <Route path="/crm">
               <Route element={<AuthProvider children={<Outlet />} />}>
-                <Route path="login" element={<LoginPage />} />
+                <Route path="login" element={renderLazyCrmPage(<LoginPage />)} />
                 <Route element={<ProtectedRoute />}>
                   <Route element={<CrmLayout />}>
-                    <Route index element={<DashboardPage />} />
-                    <Route path="leads" element={<LeadsPage />} />
-                    <Route path="leads/:id" element={<LeadDetailPage />} />
+                    <Route index element={renderLazyCrmPage(<DashboardPage />)} />
+                    <Route path="leads" element={renderLazyCrmPage(<LeadsPage />)} />
+                    <Route path="leads/:id" element={renderLazyCrmPage(<LeadDetailPage />)} />
                   </Route>
                 </Route>
               </Route>
@@ -49,5 +49,21 @@ const App = () => {
     </QueryClientProvider>
   );
 };
+
+function renderLazyCrmPage(page: ReactNode) {
+  return (
+    <Suspense fallback={<CrmPageLoadingFallback />}>
+      {page}
+    </Suspense>
+  );
+}
+
+function CrmPageLoadingFallback() {
+  return (
+    <div className="flex min-h-[240px] w-full items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+    </div>
+  );
+}
 
 export default App;
