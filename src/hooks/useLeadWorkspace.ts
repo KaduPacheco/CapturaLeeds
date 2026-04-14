@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
+import { CRM_QUERY_KEYS } from "@/features/crm/shared/queryKeys/crmQueryKeys";
+import { PipelineStage } from "@/features/crm/shared/types/crm";
 import { logAppEvent, getErrorMessage } from "@/lib/appLogger";
 import {
   createLeadNote,
@@ -14,7 +16,6 @@ import {
   updateLeadPipelineStage,
   updateTaskStatus,
 } from "@/services/crmService";
-import { PipelineStage } from "@/types/crm";
 
 interface UpdateLeadOwnerInput {
   nextOwnerId: string | null;
@@ -33,31 +34,31 @@ export function useLeadWorkspace(leadId?: string) {
   const queryClient = useQueryClient();
 
   const leadQuery = useQuery({
-    queryKey: ["crm-lead", leadId],
+    queryKey: CRM_QUERY_KEYS.lead(leadId),
     queryFn: () => getCrmLeadById(leadId!),
     enabled: Boolean(leadId),
   });
 
   const ownerIdsQuery = useQuery({
-    queryKey: ["crm-owner-ids"],
+    queryKey: CRM_QUERY_KEYS.ownerIds,
     queryFn: getCrmOwnerIds,
     enabled: Boolean(leadId),
   });
 
   const notesQuery = useQuery({
-    queryKey: ["crm-lead-notes", leadId],
+    queryKey: CRM_QUERY_KEYS.leadNotes(leadId),
     queryFn: () => getLeadNotes(leadId!),
     enabled: Boolean(leadId),
   });
 
   const eventsQuery = useQuery({
-    queryKey: ["crm-lead-events", leadId],
+    queryKey: CRM_QUERY_KEYS.leadEvents(leadId),
     queryFn: () => getLeadEvents(leadId!),
     enabled: Boolean(leadId),
   });
 
   const tasksQuery = useQuery({
-    queryKey: ["crm-lead-tasks", leadId],
+    queryKey: CRM_QUERY_KEYS.leadTasks(leadId),
     queryFn: () => getLeadTasks(leadId!),
     enabled: Boolean(leadId),
   });
@@ -88,7 +89,7 @@ export function useLeadWorkspace(leadId?: string) {
     },
     onSuccess: () => {
       invalidateLeadWorkspace(queryClient, leadId);
-      queryClient.invalidateQueries({ queryKey: ["crm-leads-task-overview"] });
+      queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leadsTaskOverview });
       toast({ title: "Follow-up agendado" });
     },
     onError: (error) => {
@@ -100,7 +101,7 @@ export function useLeadWorkspace(leadId?: string) {
     mutationFn: ({ taskId, completed }: { taskId: string; completed: boolean }) => updateTaskStatus(taskId, completed),
     onSuccess: () => {
       invalidateLeadWorkspace(queryClient, leadId);
-      queryClient.invalidateQueries({ queryKey: ["crm-leads-task-overview"] });
+      queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leadsTaskOverview });
     },
     onError: (error) => {
       reportLeadMutationError("Nao foi possivel atualizar a tarefa.", error, leadId, toast);
@@ -114,7 +115,7 @@ export function useLeadWorkspace(leadId?: string) {
     },
     onSuccess: () => {
       invalidateLeadWorkspace(queryClient, leadId);
-      queryClient.invalidateQueries({ queryKey: ["crm-leads"] });
+      queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leads });
       toast({ title: "Etapa atualizada" });
     },
     onError: (error) => {
@@ -132,8 +133,8 @@ export function useLeadWorkspace(leadId?: string) {
     },
     onSuccess: (_, variables) => {
       invalidateLeadWorkspace(queryClient, leadId);
-      queryClient.invalidateQueries({ queryKey: ["crm-leads"] });
-      queryClient.invalidateQueries({ queryKey: ["crm-owner-ids"] });
+      queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leads });
+      queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.ownerIds });
       toast({ title: variables.nextOwnerId ? "Lead atribuido" : "Ownership removido" });
     },
     onError: (error) => {
@@ -187,8 +188,8 @@ function reportLeadMutationError(
 }
 
 function invalidateLeadWorkspace(queryClient: ReturnType<typeof useQueryClient>, leadId?: string) {
-  queryClient.invalidateQueries({ queryKey: ["crm-lead", leadId] });
-  queryClient.invalidateQueries({ queryKey: ["crm-lead-notes", leadId] });
-  queryClient.invalidateQueries({ queryKey: ["crm-lead-events", leadId] });
-  queryClient.invalidateQueries({ queryKey: ["crm-lead-tasks", leadId] });
+  queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.lead(leadId) });
+  queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leadNotes(leadId) });
+  queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leadEvents(leadId) });
+  queryClient.invalidateQueries({ queryKey: CRM_QUERY_KEYS.leadTasks(leadId) });
 }

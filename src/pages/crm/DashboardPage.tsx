@@ -24,6 +24,9 @@ import SourceChart from "@/components/crm/dashboard/SourceChart";
 import TrafficVsLeadsChart from "@/components/crm/dashboard/TrafficVsLeadsChart";
 import UpcomingTasksList from "@/components/crm/dashboard/UpcomingTasksList";
 import { Button } from "@/components/ui/Button";
+import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
+import { formatDateTimePtBr } from "@/features/crm/shared/formatters/dateTime";
+import { CRM_QUERY_KEYS } from "@/features/crm/shared/queryKeys/crmQueryKeys";
 import {
   buildActivityFeed,
   buildAnalyticsFunnel,
@@ -48,25 +51,25 @@ const ANALYTICS_WINDOW_DAYS = 30;
 
 const DashboardPage = () => {
   const leadsQuery = useQuery({
-    queryKey: ["crm-dashboard", "leads"],
+    queryKey: CRM_QUERY_KEYS.dashboardLeads,
     queryFn: getDashboardLeadsDataset,
     staleTime: 30_000,
   });
 
   const tasksQuery = useQuery({
-    queryKey: ["crm-dashboard", "tasks"],
+    queryKey: CRM_QUERY_KEYS.dashboardTasks,
     queryFn: getDashboardTasksDataset,
     staleTime: 30_000,
   });
 
   const eventsQuery = useQuery({
-    queryKey: ["crm-dashboard", "events"],
+    queryKey: CRM_QUERY_KEYS.dashboardEvents,
     queryFn: () => getDashboardEventsDataset(8),
     staleTime: 20_000,
   });
 
   const analyticsQuery = useQuery({
-    queryKey: ["crm-dashboard", "analytics"],
+    queryKey: CRM_QUERY_KEYS.dashboardAnalytics,
     queryFn: () => getDashboardAnalyticsDataset(ANALYTICS_WINDOW_DAYS),
     staleTime: 20_000,
   });
@@ -128,13 +131,13 @@ const DashboardPage = () => {
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {lastUpdatedAt
-                  ? `Ultima atualizacao em ${formatDateTime(lastUpdatedAt)}`
+                  ? `Ultima atualizacao em ${formatDateTimePtBr(lastUpdatedAt)}`
                   : "Sincronizando dados do CRM"}
               </p>
             </div>
 
             <Button asChild className="h-auto justify-between rounded-3xl px-4 py-4">
-              <Link to="/crm/leads">
+              <Link to={CRM_ROUTES.leads}>
                 Explorar leads
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -273,13 +276,6 @@ const DashboardPage = () => {
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Tente novamente em instantes.";
-}
-
-function formatDateTime(timestamp: number) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(timestamp));
 }
 
 export default DashboardPage;
