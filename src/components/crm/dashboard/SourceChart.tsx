@@ -14,15 +14,17 @@ const SourceChart = ({ data, isLoading, errorMessage }: SourceChartProps) => {
   return (
     <DashboardSection
       title="Distribuicao por origem"
-      subtitle="Canais de entrada que mais alimentam a operacao comercial."
+      subtitle="Origens comerciais da carteira."
     >
       {isLoading ? (
-        <div className="grid gap-6 md:grid-cols-[220px,1fr] md:items-center">
+        <div className="grid gap-4 xl:grid-cols-[200px,minmax(0,1fr)] xl:items-center">
           <div className="mx-auto h-52 w-52 animate-pulse rounded-full bg-muted/50" />
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-14 animate-pulse rounded-2xl bg-muted/50" />
-            ))}
+          <div className="rounded-3xl border border-border/60 bg-muted/15 p-3.5">
+            <div className="space-y-2.5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-12 animate-pulse rounded-2xl bg-muted/40" />
+              ))}
+            </div>
           </div>
         </div>
       ) : errorMessage ? (
@@ -37,8 +39,8 @@ const SourceChart = ({ data, isLoading, errorMessage }: SourceChartProps) => {
           icon={<Compass className="h-5 w-5" />}
         />
       ) : (
-        <div className="grid gap-6 md:grid-cols-[220px,1fr] md:items-center">
-          <div className="h-[220px]">
+        <div className="grid gap-4 xl:grid-cols-[200px,minmax(0,1fr)] xl:items-center">
+          <div className="h-[220px] rounded-3xl border border-border/60 bg-muted/[0.12] p-3 sm:p-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -66,28 +68,37 @@ const SourceChart = ({ data, isLoading, errorMessage }: SourceChartProps) => {
             </ResponsiveContainer>
           </div>
 
-          <div className="space-y-3">
-            {data.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/20 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                    aria-hidden="true"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{entry.label}</p>
-                    <p className="text-xs text-muted-foreground">{entry.percentage}% da base</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-foreground">{entry.value}</span>
-              </div>
-            ))}
+          <div className="rounded-3xl border border-border/60 bg-muted/[0.14] p-3.5">
+            <div className="mb-3 px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Origens</p>
+            </div>
+            <div className="space-y-2.5">
+              {data.map((entry) => (
+                <CompactSourceRow key={entry.id} entry={entry} unit="leads" />
+              ))}
+            </div>
           </div>
         </div>
       )}
     </DashboardSection>
   );
 };
+
+function CompactSourceRow({ entry, unit }: { entry: DashboardChartDatum; unit: string }) {
+  return (
+    <div className="rounded-[22px] border border-border/60 bg-background/70 px-3 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} aria-hidden="true" />
+          <p className="truncate text-sm font-medium text-foreground">{entry.label}</p>
+        </div>
+        <span className="text-sm font-semibold text-foreground">{entry.value}</span>
+      </div>
+      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+        {entry.percentage}% da base de {unit}
+      </p>
+    </div>
+  );
+}
 
 export default SourceChart;

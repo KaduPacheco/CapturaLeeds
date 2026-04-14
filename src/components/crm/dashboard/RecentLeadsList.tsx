@@ -14,7 +14,7 @@ const RecentLeadsList = ({ data, isLoading, errorMessage }: RecentLeadsListProps
   return (
     <DashboardSection
       title="Leads recentes"
-      subtitle="Ultimas entradas na base para triagem e priorizacao."
+      subtitle="Ultimas entradas."
       action={
         <Link
           to="/crm/leads"
@@ -43,27 +43,29 @@ const RecentLeadsList = ({ data, isLoading, errorMessage }: RecentLeadsListProps
             <Link
               key={lead.id}
               to={`/crm/leads/${lead.id}`}
-              className="block rounded-2xl border border-border/70 bg-muted/15 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5"
+              className="block min-h-[100px] rounded-[22px] border border-border/65 bg-muted/[0.12] px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
             >
-              <div className="mb-3 flex items-start justify-between gap-4">
-                <div className="min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 space-y-2">
                   <p className="truncate text-sm font-semibold text-foreground">{lead.name}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                     <Building2 className="h-3.5 w-3.5" />
                     <span className="truncate">{lead.company || "Empresa nao informada"}</span>
                   </div>
-                </div>
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                  {lead.stageLabel}
-                </span>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span>{lead.source}</span>
-                <span>{lead.whatsapp}</span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock3 className="h-3.5 w-3.5" />
-                  {formatDateTime(lead.createdAt)}
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-muted-foreground">
+                    <span className="rounded-full border border-border/70 bg-background/55 px-2.5 py-1 text-[11px] font-medium text-foreground/85">
+                      {lead.source}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {formatDateTime(lead.createdAt)}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                  {lead.stageLabel}
                 </span>
               </div>
             </Link>

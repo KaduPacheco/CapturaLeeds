@@ -25,15 +25,15 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
 
   return (
     <DashboardSection
-      title="Volume e conversao por periodo"
-      subtitle="Serie executiva com visitors, leads capturados e taxa de conversao real da landing."
+      title="Conversao por periodo"
+      subtitle="Visitors, conversoes e taxa no periodo."
     >
       {isLoading ? (
         <div className="space-y-4">
-          <div className="h-[280px] animate-pulse rounded-3xl bg-muted/40" />
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="h-[300px] animate-pulse rounded-3xl bg-muted/40" />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-20 animate-pulse rounded-2xl bg-muted/40" />
+              <div key={index} className="h-16 animate-pulse rounded-2xl bg-muted/40" />
             ))}
           </div>
         </div>
@@ -49,8 +49,8 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
           icon={<ActivitySquare className="h-5 w-5" />}
         />
       ) : (
-        <div className="space-y-6">
-          <div className="h-[320px]">
+        <div className="space-y-5">
+          <div className="h-[320px] rounded-3xl border border-border/60 bg-muted/[0.12] p-3 sm:p-4">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -120,14 +120,14 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
             </ResponsiveContainer>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <SummaryCard
-              label="Visitors no recorte"
+              label="Visitors no periodo"
               value={data.reduce((sum, entry) => sum + entry.visitors, 0)}
               helper="Soma dos visitors unicos por dia."
             />
             <SummaryCard
-              label="Leads no recorte"
+              label="Conversoes no periodo"
               value={data.reduce((sum, entry) => sum + entry.leads, 0)}
               helper="Envios com sucesso registrados no periodo."
             />
@@ -145,10 +145,10 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
 
 function SummaryCard({ label, value, helper }: { label: string; value: number | string; helper: string }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+    <div className="rounded-2xl border border-border/60 bg-muted/[0.14] px-4 py-3">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">{helper}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+      <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{helper}</p>
     </div>
   );
 }
