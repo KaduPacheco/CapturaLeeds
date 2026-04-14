@@ -8,8 +8,12 @@ import {
   RefreshCcw,
   UserPlus,
 } from "lucide-react";
-import DashboardSection from "./DashboardSection";
-import { SectionEmptyState, SectionErrorState, SectionSkeleton } from "./SectionStates";
+import DashboardSection from "@/features/crm/shared/components/DashboardSection";
+import {
+  SectionEmptyState,
+  SectionErrorState,
+  SectionSkeleton,
+} from "@/features/crm/shared/components/SectionStates";
 import { DashboardActivityItem } from "@/types/dashboard";
 
 interface ActivityFeedProps {
@@ -22,10 +26,10 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
   return (
     <DashboardSection
       title="Atividade recente"
-      subtitle="Eventos mais recentes do CRM para leitura rapida do contexto."
+      subtitle="Eventos recentes do CRM."
       action={
         <div className="rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground">
-          Feed ao vivo via lead_events
+          Eventos
         </div>
       }
     >
@@ -43,19 +47,22 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
           icon={<History className="h-5 w-5" />}
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-1.5">
           {data.map((item, index) => (
-            <div key={item.id} className="relative pl-12">
+            <div key={item.id} className="relative pl-11 sm:pl-12">
               {index < data.length - 1 ? (
-                <span className="absolute left-[18px] top-9 h-[calc(100%+0.75rem)] w-px bg-border" aria-hidden="true" />
+                <span
+                  className="absolute left-4 top-10 h-[calc(100%+0.5rem)] w-px bg-border/80"
+                  aria-hidden="true"
+                />
               ) : null}
 
-              <div className="absolute left-0 top-0 flex h-9 w-9 items-center justify-center rounded-2xl bg-muted text-foreground">
+              <div className="absolute left-0 top-1 flex h-8 w-8 items-center justify-center rounded-2xl border border-border/70 bg-background text-foreground">
                 {getActivityIcon(item.eventType)}
               </div>
 
-              <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
-                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-2xl px-1 py-3 sm:py-3.5">
+                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-foreground">{item.title}</p>
                     <p className="text-xs text-muted-foreground">{formatDateTime(item.occurredAt)}</p>
@@ -68,8 +75,8 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
-                <p className="text-sm leading-6 text-muted-foreground">{item.description}</p>
-                {item.company ? <p className="mt-2 text-xs text-muted-foreground">{item.company}</p> : null}
+                <p className="text-sm leading-5 text-muted-foreground">{item.description}</p>
+                {item.company ? <p className="mt-1.5 text-xs text-muted-foreground">{item.company}</p> : null}
               </div>
             </div>
           ))}
