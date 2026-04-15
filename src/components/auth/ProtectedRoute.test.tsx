@@ -85,6 +85,33 @@ describe("ProtectedRoute - Seguranca de Rota", () => {
     expect(getByText("Dashboard CRM")).toBeInTheDocument();
     expect(queryByText("Conteudo Privado")).not.toBeInTheDocument();
   });
+
+  it("deve usar o fallback mais seguro quando nao houver unauthorizedPath explicito", () => {
+    mockedUseAuth.mockReturnValue(
+      buildAuthMock({
+        session: { user: { id: "user-1" } } as never,
+        access: {
+          role: "manager",
+          permissions: ["crm:access", "crm:leads:read"],
+        },
+        hasPermission: vi.fn((permission) => permission === "crm:leads:read"),
+      }),
+    );
+
+    const { getByText, queryByText } = render(
+      <MemoryRouter initialEntries={["/crm"]}>
+        <Routes>
+          <Route element={<ProtectedRoute requiredPermission="crm:dashboard:read" />}>
+            <Route path="/crm" element={<div>Dashboard CRM</div>} />
+          </Route>
+          <Route path="/crm/leads" element={<div>Leads CRM</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(getByText("Leads CRM")).toBeInTheDocument();
+    expect(queryByText("Dashboard CRM")).not.toBeInTheDocument();
+  });
 });
 
 function buildAuthMock(overrides?: Partial<ReturnType<typeof useAuth>>) {

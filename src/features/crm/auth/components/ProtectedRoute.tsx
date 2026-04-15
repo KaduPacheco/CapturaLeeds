@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/crm/auth/hooks/useAuth";
-import { AuthPermission } from "@/features/crm/auth/lib/authAccess";
+import { AuthPermission, getDefaultAuthorizedCrmRoute } from "@/features/crm/auth/lib/authAccess";
 import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
 import { logAppEvent } from "@/lib/appLogger";
 
@@ -13,9 +13,9 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({
   requiredPermission,
   loginPath = CRM_ROUTES.login,
-  unauthorizedPath = CRM_ROUTES.root,
+  unauthorizedPath,
 }: ProtectedRouteProps) => {
-  const { session, loading, hasPermission } = useAuth();
+  const { access, session, loading, hasPermission } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -31,15 +31,18 @@ const ProtectedRoute = ({
   }
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
+    const fallbackPath = unauthorizedPath ?? getDefaultAuthorizedCrmRoute(access);
+
     logAppEvent("auth", "warn", "Acesso negado por permissao", {
       pathname: location.pathname,
       requiredPermission,
       userId: session.user.id,
+      fallbackPath,
     });
 
     return (
       <Navigate
-        to={unauthorizedPath}
+        to={fallbackPath}
         state={{ from: location, reason: "missing_permission", requiredPermission }}
         replace
       />

@@ -12,7 +12,7 @@ import { AuthProvider } from "./features/crm/auth/providers/AuthProvider";
 import ProtectedRoute from "./features/crm/auth/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
-const LoginPage = lazy(() => import("./pages/crm/LoginPage"));
+const LoginPage = lazy(() => import("./features/crm/auth/page/LoginPage"));
 const DashboardPage = lazy(() => import("./features/crm/dashboard/page/DashboardPage"));
 const AnalyticsPage = lazy(() => import("./features/crm/analytics/page/AnalyticsPage"));
 const OperacaoPage = lazy(() => import("./features/crm/operacao/page/OperacaoPage"));
@@ -32,13 +32,17 @@ const App = () => {
             <Route path="/crm">
               <Route element={<AuthProvider children={<Outlet />} />}>
                 <Route path="login" element={renderLazyCrmPage(<LoginPage />)} />
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute requiredPermission="crm:access" />}>
                   <Route element={<CrmLayout />}>
-                    <Route index element={renderLazyCrmPage(<DashboardPage />)} />
-                    <Route path="analytics" element={renderLazyCrmPage(<AnalyticsPage />)} />
-                    <Route path="operacao" element={renderLazyCrmPage(<OperacaoPage />)} />
-                    <Route path="leads" element={renderLazyCrmPage(<LeadsPage />)} />
-                    <Route path="leads/:id" element={renderLazyCrmPage(<LeadDetailPage />)} />
+                    <Route element={<ProtectedRoute requiredPermission="crm:dashboard:read" />}>
+                      <Route index element={renderLazyCrmPage(<DashboardPage />)} />
+                      <Route path="analytics" element={renderLazyCrmPage(<AnalyticsPage />)} />
+                      <Route path="operacao" element={renderLazyCrmPage(<OperacaoPage />)} />
+                    </Route>
+                    <Route element={<ProtectedRoute requiredPermission="crm:leads:read" />}>
+                      <Route path="leads" element={renderLazyCrmPage(<LeadsPage />)} />
+                      <Route path="leads/:id" element={renderLazyCrmPage(<LeadDetailPage />)} />
+                    </Route>
                   </Route>
                 </Route>
               </Route>

@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { BarChart3, BriefcaseBusiness, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { getDefaultAuthorizedCrmRoute } from "@/features/crm/auth/lib/authAccess";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
@@ -13,28 +14,34 @@ const navigationItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     end: true,
+    requiredPermission: "crm:dashboard:read" as const,
   },
   {
     to: CRM_ROUTES.analytics,
     label: "Analytics",
     icon: BarChart3,
+    requiredPermission: "crm:dashboard:read" as const,
   },
   {
     to: CRM_ROUTES.operacao,
     label: "Operacao",
     icon: BriefcaseBusiness,
+    requiredPermission: "crm:dashboard:read" as const,
   },
   {
     to: CRM_ROUTES.leads,
     label: "Leads",
     icon: Users,
+    requiredPermission: "crm:leads:read" as const,
   },
 ] as const;
 
 const CrmLayout = () => {
-  const { signOut, user } = useAuth();
+  const { access, hasPermission, signOut, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const homeRoute = getDefaultAuthorizedCrmRoute(access);
+  const visibleNavigationItems = navigationItems.filter((item) => hasPermission(item.requiredPermission));
 
   const handleSignOut = async () => {
     try {
@@ -54,11 +61,11 @@ const CrmLayout = () => {
       <header className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/88">
         <div className="container flex h-full items-center justify-between">
           <div className="flex min-h-16 items-center gap-5 lg:gap-6">
-            <Link to={CRM_ROUTES.root} className="text-xl font-bold tracking-tight text-primary">
+            <Link to={homeRoute} className="text-xl font-bold tracking-tight text-primary">
               CRM Admin
             </Link>
             <nav className="hidden items-center gap-1.5 md:flex lg:gap-2">
-              {navigationItems.map((item) => {
+              {visibleNavigationItems.map((item) => {
                 const Icon = item.icon;
 
                 return (

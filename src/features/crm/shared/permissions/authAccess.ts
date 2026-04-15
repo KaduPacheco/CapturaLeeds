@@ -1,4 +1,5 @@
 import { User } from "@supabase/supabase-js";
+import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
 import { AuthAccess, AuthPermission, AuthRole } from "@/features/crm/shared/types/auth-access";
 
 export type { AuthAccess, AuthPermission, AuthRole } from "@/features/crm/shared/types/auth-access";
@@ -47,6 +48,18 @@ export function buildAuthAccess(user: User | null): AuthAccess {
 
 export function hasPermission(access: AuthAccess, permission: AuthPermission) {
   return access.permissions.includes(permission);
+}
+
+export function getDefaultAuthorizedCrmRoute(access: AuthAccess) {
+  if (hasPermission(access, "crm:dashboard:read")) {
+    return CRM_ROUTES.root;
+  }
+
+  if (hasPermission(access, "crm:leads:read")) {
+    return CRM_ROUTES.leads;
+  }
+
+  return CRM_ROUTES.login;
 }
 
 function resolveAuthRole(user: User): AuthRole {

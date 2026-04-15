@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { AlertCircle } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useLeadWorkspace } from "@/hooks/useLeadWorkspace";
+import { useAuth } from "@/features/crm/auth/hooks/useAuth";
+import { useLeadWorkspace } from "@/features/crm/leads/detail/hooks/useLeadWorkspace";
 import LeadDetailHeader from "@/features/crm/leads/detail/components/LeadDetailHeader";
 import LeadIdentityCard from "@/features/crm/leads/detail/components/LeadIdentityCard";
 import LeadOperationalSummaryAside from "@/features/crm/leads/detail/components/LeadOperationalSummaryAside";
@@ -12,13 +12,14 @@ import LeadTasksPanel from "@/features/crm/leads/detail/components/LeadTasksPane
 import LeadTimelinePanel from "@/features/crm/leads/detail/components/LeadTimelinePanel";
 import { useLeadDetailDrafts } from "@/features/crm/leads/detail/hooks/useLeadDetailDrafts";
 import { selectLeadDetailViewModel } from "@/features/crm/leads/detail/selectors/leadDetailSelectors";
-import type { PipelineStage } from "@/types/crm";
+import type { PipelineStage } from "@/features/crm/shared/types/crm";
 
 const LeadDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const drafts = useLeadDetailDrafts();
   const {
+    permissions,
     leadQuery,
     ownerIdsQuery,
     notesQuery,
@@ -140,6 +141,7 @@ const LeadDetailPage = () => {
             taskSummary={viewModel.taskSummary}
             nextTaskHelper={viewModel.nextTaskHelper}
             openTasksHelper={viewModel.openTasksHelper}
+            canEditLead={permissions.canEditLead}
             stageMutationPending={stageMutation.isPending}
             ownerMutationPending={ownerMutation.isPending}
             onStageChange={handleStageChange}
@@ -152,7 +154,7 @@ const LeadDetailPage = () => {
             taskTitle={drafts.taskTitle}
             taskDate={drafts.taskDate}
             taskMutationPending={taskMutation.isPending}
-            canCreateTask={Boolean(user?.id)}
+            canManageTasks={permissions.canManageTasks && Boolean(user?.id)}
             onTaskTitleChange={drafts.setTaskTitle}
             onTaskDateChange={drafts.setTaskDate}
             onSubmitTask={handleAddTask}
@@ -168,7 +170,7 @@ const LeadDetailPage = () => {
         <aside className="space-y-6">
           <LeadQuickNoteCard
             newNote={drafts.newNote}
-            canSaveNote={Boolean(user?.id)}
+            canSaveNote={permissions.canSaveNote && Boolean(user?.id)}
             noteMutationPending={noteMutation.isPending}
             onNewNoteChange={drafts.setNewNote}
             onSubmitNote={handleAddNote}

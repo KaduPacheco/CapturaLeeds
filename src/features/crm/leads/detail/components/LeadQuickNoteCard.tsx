@@ -26,12 +26,16 @@ const LeadQuickNoteCard = ({
         <textarea
           value={newNote}
           onChange={(event) => onNewNoteChange(event.target.value)}
-          placeholder="Registre contexto comercial, objeÃ§Ãµes ou combinados."
-          className="min-h-[140px] w-full rounded-2xl border border-input bg-background/70 px-4 py-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Registre contexto comercial, objecoes ou combinados."
+          disabled={!canSaveNote}
+          className="min-h-[140px] w-full rounded-2xl border border-input bg-background/70 px-4 py-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
         />
         <Button type="submit" className="w-full" disabled={noteMutationPending || !newNote.trim() || !canSaveNote}>
           Salvar nota
         </Button>
+        {!canSaveNote ? (
+          <p className="text-sm text-muted-foreground">Sem permissao para registrar anotacoes neste lead.</p>
+        ) : null}
       </form>
     </section>
   );

@@ -1,7 +1,7 @@
 import { Calendar, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { formatTaskDueDate } from "@/lib/crmLeadPresentation";
+import { formatTaskDueDate } from "@/lib/crmLeadPresentation/taskSummary";
 import type { CrmLeadTask } from "@/types/crm";
 import { cn } from "@/utils/cn";
 
@@ -11,7 +11,7 @@ interface LeadTasksPanelProps {
   taskTitle: string;
   taskDate: string;
   taskMutationPending: boolean;
-  canCreateTask: boolean;
+  canManageTasks: boolean;
   onTaskTitleChange: (value: string) => void;
   onTaskDateChange: (value: string) => void;
   onSubmitTask: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -24,7 +24,7 @@ const LeadTasksPanel = ({
   taskTitle,
   taskDate,
   taskMutationPending,
-  canCreateTask,
+  canManageTasks,
   onTaskTitleChange,
   onTaskDateChange,
   onSubmitTask,
@@ -59,7 +59,8 @@ const LeadTasksPanel = ({
                   <button
                     type="button"
                     onClick={() => onToggleTask(task.id, !task.completed)}
-                    className="mt-0.5 text-primary transition-transform hover:scale-110"
+                    disabled={!canManageTasks}
+                    className="mt-0.5 text-primary transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {task.completed ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
                   </button>
@@ -84,16 +85,21 @@ const LeadTasksPanel = ({
             value={taskTitle}
             onChange={(event) => onTaskTitleChange(event.target.value)}
             placeholder="Nova tarefa ou follow-up"
+            disabled={!canManageTasks}
           />
           <Input
             type="date"
             value={taskDate}
             onChange={(event) => onTaskDateChange(event.target.value)}
+            disabled={!canManageTasks}
           />
-          <Button type="submit" disabled={taskMutationPending || !taskTitle.trim() || !taskDate || !canCreateTask}>
+          <Button type="submit" disabled={taskMutationPending || !taskTitle.trim() || !taskDate || !canManageTasks}>
             Agendar
           </Button>
         </form>
+        {!canManageTasks ? (
+          <p className="text-sm text-muted-foreground">Sem permissao para criar ou concluir tarefas neste lead.</p>
+        ) : null}
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { buildAuthAccess, hasPermission } from "@/lib/authAccess";
+import { buildAuthAccess, getDefaultAuthorizedCrmRoute, hasPermission } from "@/lib/authAccess";
 
 function createUser(overrides: Partial<User> = {}) {
   return {
@@ -72,6 +72,28 @@ describe("authAccess", () => {
     expect(hasPermission(access, "crm:tasks:write")).toBe(false);
   });
 
+  it("prioritizes app metadata permissions and falls back to app metadata role", () => {
+    const user = createUser({
+      app_metadata: {
+        role: "manager",
+        crm_permissions: ["crm:dashboard:read", "crm:leads:read"],
+      },
+      user_metadata: {
+        crm_permissions: ["crm:tasks:write"],
+      },
+    });
+
+    const access = buildAuthAccess(user);
+
+    expect(access.role).toBe("manager");
+    expect(access.permissions).toEqual([
+      "crm:access",
+      "crm:dashboard:read",
+      "crm:leads:read",
+    ]);
+    expect(hasPermission(access, "crm:tasks:write")).toBe(false);
+  });
+
   it("falls back to the default authenticated permission set when no custom permissions exist", () => {
     const user = createUser({
       user_metadata: {
@@ -90,5 +112,28 @@ describe("authAccess", () => {
       "crm:notes:write",
       "crm:tasks:write",
     ]);
+  });
+
+  it("resolves the safest CRM fallback route from the current permissions", () => {
+    expect(
+      getDefaultAuthorizedCrmRoute({
+        role: "manager",
+        permissions: ["crm:access", "crm:dashboard:read"],
+      }),
+    ).toBe("/crm");
+
+    expect(
+      getDefaultAuthorizedCrmRoute({
+        role: "manager",
+        permissions: ["crm:access", "crm:leads:read"],
+      }),
+    ).toBe("/crm/leads");
+
+    expect(
+      getDefaultAuthorizedCrmRoute({
+        role: "authenticated",
+        permissions: ["crm:access"],
+      }),
+    ).toBe("/crm/login");
   });
 });

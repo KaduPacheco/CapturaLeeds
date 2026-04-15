@@ -1,7 +1,5 @@
 import { Package } from "lucide-react";
-import {
-  PIPELINE_STAGE_OPTIONS,
-} from "@/lib/crmLeadPresentation";
+import { PIPELINE_STAGE_OPTIONS } from "@/lib/crmLeadPresentation/stages";
 import LeadOperationalSummaryCard from "@/features/crm/leads/detail/components/LeadOperationalSummaryCard";
 import type { CrmLead, CrmOwnerOption, PipelineStage } from "@/types/crm";
 
@@ -21,6 +19,7 @@ interface LeadPipelineOwnershipPanelProps {
   };
   nextTaskHelper: string;
   openTasksHelper: string;
+  canEditLead: boolean;
   stageMutationPending: boolean;
   ownerMutationPending: boolean;
   onStageChange: (value: PipelineStage) => void;
@@ -39,6 +38,7 @@ const LeadPipelineOwnershipPanel = ({
   taskSummary,
   nextTaskHelper,
   openTasksHelper,
+  canEditLead,
   stageMutationPending,
   ownerMutationPending,
   onStageChange,
@@ -84,7 +84,7 @@ const LeadPipelineOwnershipPanel = ({
 
                 onStageChange(event.target.value as PipelineStage);
               }}
-              disabled={stageMutationPending}
+              disabled={!canEditLead || stageMutationPending}
               className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
             >
               <option value="" disabled>
@@ -96,7 +96,9 @@ const LeadPipelineOwnershipPanel = ({
                 </option>
               ))}
             </select>
-            <p className="text-sm text-muted-foreground">{currentStageDescription}</p>
+            <p className="text-sm text-muted-foreground">
+              {canEditLead ? currentStageDescription : "Sem permissao para alterar a etapa deste lead."}
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -104,7 +106,7 @@ const LeadPipelineOwnershipPanel = ({
             <select
               value={lead.owner_id ?? ""}
               onChange={(event) => onOwnerChange(event.target.value || null)}
-              disabled={ownerMutationPending}
+              disabled={!canEditLead || ownerMutationPending}
               className="h-11 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground"
             >
               <option value="">Sem responsavel</option>
@@ -115,9 +117,11 @@ const LeadPipelineOwnershipPanel = ({
               ))}
             </select>
             <p className="text-sm text-muted-foreground">
-              {lead.owner_id
-                ? `Responsavel atual: ${currentOwnerLabel}`
-                : "Este lead ainda nao possui ownership definido."}
+              {canEditLead
+                ? lead.owner_id
+                  ? `Responsavel atual: ${currentOwnerLabel}`
+                  : "Este lead ainda nao possui ownership definido."
+                : "Sem permissao para atualizar ownership deste lead."}
             </p>
             {ownerIdsError ? (
               <p className="text-sm text-amber-700 dark:text-amber-300">
