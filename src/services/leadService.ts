@@ -1,8 +1,6 @@
-// Este script isola a lógica de comunicação com o Supabase sem dependência de SDKs pesados.
+import { getSupabasePublicEnv } from "@/infra/supabase/env";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
+// Este script isola a logica de comunicacao com o Supabase sem dependencia de SDKs pesados.
 
 export interface LeadData {
   nome: string;
@@ -13,22 +11,21 @@ export interface LeadData {
 }
 
 export async function submitLeadToSupabase(lead: LeadData): Promise<boolean> {
-  // Hardening: Fallback seguro mantido na Tabela Padrão até o Trigger Backend (RPC) nascer na infra real.
-  const INTAKE_ENDPOINT = import.meta.env.VITE_SUPABASE_INTAKE_URL || `${SUPABASE_URL}/rest/v1/leads`;
+  const supabaseEnv = getSupabasePublicEnv();
 
-  const response = await fetch(INTAKE_ENDPOINT, {
+  const response = await fetch(supabaseEnv.intakeEndpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      Prefer: "return=minimal" // Retorna apenas 20x/status, sem expor o database.
+      apikey: supabaseEnv.anonKey,
+      Authorization: `Bearer ${supabaseEnv.anonKey}`,
+      Prefer: "return=minimal",
     },
     body: JSON.stringify({
       ...lead,
       origem: "landing_page",
-      status: "novo"
-    })
+      status: "novo",
+    }),
   });
 
   if (!response.ok) {
@@ -37,10 +34,9 @@ export async function submitLeadToSupabase(lead: LeadData): Promise<boolean> {
     throw new Error(`Erro ao salvar lead (Status ${response.status})`);
   }
 
-  // Enviar para o n8n Webhook
-  if (N8N_WEBHOOK_URL) {
+  if (supabaseEnv.n8nWebhookUrl) {
     try {
-      const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
+      const n8nResponse = await fetch(supabaseEnv.n8nWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,8 +44,8 @@ export async function submitLeadToSupabase(lead: LeadData): Promise<boolean> {
         body: JSON.stringify({
           ...lead,
           origem: "landing_page",
-          status: "novo"
-        })
+          status: "novo",
+        }),
       });
 
       if (!n8nResponse.ok) {
@@ -57,8 +53,6 @@ export async function submitLeadToSupabase(lead: LeadData): Promise<boolean> {
       }
     } catch (error) {
       console.warn("Erro ao enviar dados para o webhook do n8n:", error);
-      // Não lançamos o erro aqui para não quebrar o fluxo principal caso o n8n esteja fora do ar,
-      // já que os dados principais já foram salvos no Supabase com sucesso.
     }
   }
 

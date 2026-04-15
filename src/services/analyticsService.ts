@@ -1,6 +1,4 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const ANALYTICS_ENDPOINT = `${SUPABASE_URL}/rest/v1/analytics_events`;
+import { tryGetSupabasePublicEnv } from "@/infra/supabase/env";
 
 export const ANALYTICS_EVENT_TYPES = [
   "page_view",
@@ -66,7 +64,9 @@ export async function trackAnalyticsEvent(
   eventType: AnalyticsEventType,
   options: TrackAnalyticsOptions = {},
 ) {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  const supabaseEnv = tryGetSupabasePublicEnv();
+
+  if (!supabaseEnv) {
     console.warn(`[Analytics] Variaveis do Supabase ausentes. Evento '${eventType}' nao foi enviado.`);
     return false;
   }
@@ -74,12 +74,12 @@ export async function trackAnalyticsEvent(
   const payload = buildAnalyticsPayload(eventType, options);
 
   try {
-    const response = await fetch(ANALYTICS_ENDPOINT, {
+    const response = await fetch(supabaseEnv.analyticsEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: supabaseEnv.anonKey,
+        Authorization: `Bearer ${supabaseEnv.anonKey}`,
         Prefer: "return=minimal",
       },
       body: JSON.stringify(payload),

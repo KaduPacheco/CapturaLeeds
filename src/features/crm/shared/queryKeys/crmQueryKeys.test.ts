@@ -14,5 +14,11 @@ describe("CRM_QUERY_KEYS", () => {
     expect(CRM_QUERY_KEYS.dashboardTasks).toEqual(["crm-dashboard", "tasks"]);
     expect(CRM_QUERY_KEYS.dashboardEvents).toEqual(["crm-dashboard", "events"]);
     expect(CRM_QUERY_KEYS.dashboardAnalytics).toEqual(["crm-dashboard", "analytics"]);
+    expect(CRM_QUERY_KEYS.leadWorkspace("lead-1")).toEqual([
+      ["crm-lead", "lead-1"],
+      ["crm-lead-notes", "lead-1"],
+      ["crm-lead-events", "lead-1"],
+      ["crm-lead-tasks", "lead-1"],
+    ]);
   });
 });
