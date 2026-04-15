@@ -12,6 +12,7 @@ import ActivityFeed from "@/features/crm/dashboard/components/ActivityFeed";
 import AttentionPanel from "@/features/crm/dashboard/components/AttentionPanel";
 import RecentLeadsList from "@/features/crm/dashboard/components/RecentLeadsList";
 import UpcomingTasksList from "@/features/crm/dashboard/components/UpcomingTasksList";
+import { useAuth } from "@/features/crm/auth/hooks/useAuth";
 import { useCrmDashboardData } from "@/features/crm/dashboard/useCrmDashboardData";
 import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
 import { formatDateTimePtBr } from "@/features/crm/shared/formatters/dateTime";
@@ -23,11 +24,11 @@ import {
 import { Button } from "@/components/ui/Button";
 
 const DashboardPage = () => {
+  const { hasPermission } = useAuth();
   const {
     leadsQuery,
     tasksQuery,
     eventsQuery,
-    analyticsQuery,
     leadMetrics,
     taskMetrics,
     recentLeads,
@@ -35,16 +36,22 @@ const DashboardPage = () => {
     activityFeed,
     attentionData,
     lastUpdatedAt,
-  } = useCrmDashboardData();
+  } = useCrmDashboardData({
+    includeLeads: true,
+    includeTasks: true,
+    includeEvents: true,
+    includeAnalytics: false,
+  });
 
   const totalLeadsMetric = leadMetrics.find((metric) => metric.id === "total_leads");
   const overdueTasksMetric = taskMetrics.find((metric) => metric.id === "overdue_tasks");
+  const canReadLeads = hasPermission("crm:leads:read");
 
   return (
     <div className="space-y-8 lg:space-y-10">
       <section className="relative overflow-hidden rounded-[36px] border border-border/70 bg-card shadow-[0_32px_90px_-54px_rgba(15,23,42,0.58)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(15,118,110,0.14),transparent_40%)]" />
-        <div className="relative grid gap-6 px-6 py-6 sm:px-7 sm:py-7 xl:grid-cols-[minmax(0,1.4fr),minmax(280px,332px)] xl:items-end xl:px-8 xl:py-8">
+        <div className="relative grid gap-6 px-6 py-6 sm:px-7 sm:py-7 xl:grid-cols-[minmax(0,1.35fr),minmax(320px,380px)] xl:items-stretch xl:px-8 xl:py-8">
           <div className="max-w-3xl space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               <LayoutDashboard className="h-3.5 w-3.5" />
@@ -82,7 +89,7 @@ const DashboardPage = () => {
                   Situacao atual
                 </p>
                 <p className="text-base font-semibold tracking-tight text-foreground">
-                  {leadsQuery.isError || tasksQuery.isError || eventsQuery.isError || analyticsQuery.isError
+                  {leadsQuery.isError || tasksQuery.isError || eventsQuery.isError
                     ? "Leitura com alertas"
                     : "Painel atualizado"}
                 </p>
@@ -96,12 +103,14 @@ const DashboardPage = () => {
               <div className="h-px bg-border/70" />
 
               <div className="space-y-2.5">
-                <Button asChild className="h-auto w-full justify-between rounded-2xl px-4 py-3.5">
-                  <Link to={CRM_ROUTES.leads}>
-                    Leads
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+                {canReadLeads ? (
+                  <Button asChild className="h-auto w-full justify-between rounded-2xl px-4 py-3.5">
+                    <Link to={CRM_ROUTES.leads}>
+                      Leads
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : null}
                 <Button
                   asChild
                   variant="outline"
@@ -247,7 +256,7 @@ function SummaryPill({
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{helper}</p>
+      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{helper}</p>
     </div>
   );
 }

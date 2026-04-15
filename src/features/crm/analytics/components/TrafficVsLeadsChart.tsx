@@ -29,7 +29,7 @@ const TrafficVsLeadsChart = ({ data, isLoading, errorMessage }: TrafficVsLeadsCh
       subtitle="Visitors e conversoes por canal."
     >
       {isLoading ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),240px]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr),280px]">
           <div className="h-[300px] animate-pulse rounded-3xl bg-muted/40" />
           <div className="rounded-3xl border border-border/60 bg-muted/15 p-3.5">
             <div className="space-y-2.5">
@@ -51,7 +51,7 @@ const TrafficVsLeadsChart = ({ data, isLoading, errorMessage }: TrafficVsLeadsCh
           icon={<GitCompareArrows className="h-5 w-5" />}
         />
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),240px]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr),280px]">
           <div className="h-[292px] rounded-3xl border border-border/60 bg-muted/[0.12] p-3 sm:h-[300px] sm:p-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical" margin={{ top: 8, right: 10, left: 0, bottom: 4 }}>
@@ -60,6 +60,7 @@ const TrafficVsLeadsChart = ({ data, isLoading, errorMessage }: TrafficVsLeadsCh
                 <YAxis
                   type="category"
                   dataKey="label"
+                  tickFormatter={formatAxisLabel}
                   tickLine={false}
                   axisLine={false}
                   width={112}
@@ -91,7 +92,7 @@ const TrafficVsLeadsChart = ({ data, isLoading, errorMessage }: TrafficVsLeadsCh
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Canais</p>
               <p className="text-[11px] font-medium text-muted-foreground">Conv.</p>
             </div>
-            <div className="space-y-2.5">
+            <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-1">
               {data.map((entry) => (
                 <ChannelRow key={entry.id} entry={entry} />
               ))}
@@ -105,37 +106,33 @@ const TrafficVsLeadsChart = ({ data, isLoading, errorMessage }: TrafficVsLeadsCh
 
 function ChannelRow({ entry }: { entry: DashboardTrafficComparisonDatum }) {
   return (
-    <div className="rounded-[22px] border border-border/60 bg-background/70 px-3 py-3">
+    <div className="rounded-[20px] border border-border/60 bg-background/70 px-3 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-            <p className="truncate text-sm font-medium text-foreground">{entry.label}</p>
+            <p className="truncate text-sm font-medium text-foreground" title={entry.label}>
+              {formatAxisLabel(entry.label)}
+            </p>
           </div>
           <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
-            {entry.visitorsShare}% do trafego e {entry.leadsShare}% dos leads
+            {entry.visitors} visitors - {entry.leads} leads
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-border/60 bg-muted/25 px-2 py-1 text-[11px] font-semibold text-foreground">
           {entry.conversionRate}%
         </span>
       </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <MetricPill label="Visitors" value={entry.visitors} />
-        <MetricPill label="Leads" value={entry.leads} />
+      <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+        <span>{entry.visitorsShare}% do trafego</span>
+        <span>{entry.leadsShare}% dos leads</span>
       </div>
     </div>
   );
 }
 
-function MetricPill({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-muted/20 px-2.5 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-base font-semibold tracking-tight text-foreground">{value}</p>
-    </div>
-  );
+function formatAxisLabel(value: string) {
+  return value.length > 18 ? `${value.slice(0, 10)}...${value.slice(-5)}` : value;
 }
 
 export default TrafficVsLeadsChart;

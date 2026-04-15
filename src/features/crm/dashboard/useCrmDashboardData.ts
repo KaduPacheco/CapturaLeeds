@@ -18,32 +18,55 @@ import {
   getDashboardEventsDataset,
   getDashboardLeadsDataset,
   getDashboardTasksDataset,
-} from "@/services/dashboardService";
+} from "@/features/crm/dashboard/services/dashboardService";
 
 const ANALYTICS_WINDOW_DAYS = 30;
+const DASHBOARD_EVENTS_LIMIT = 8;
 
-export function useCrmDashboardData() {
+interface UseCrmDashboardDataOptions {
+  includeLeads?: boolean;
+  includeTasks?: boolean;
+  includeEvents?: boolean;
+  includeAnalytics?: boolean;
+  analyticsWindowDays?: number;
+  eventsLimit?: number;
+}
+
+export function useCrmDashboardData(options: UseCrmDashboardDataOptions = {}) {
+  const {
+    includeLeads = true,
+    includeTasks = true,
+    includeEvents = true,
+    includeAnalytics = true,
+    analyticsWindowDays = ANALYTICS_WINDOW_DAYS,
+    eventsLimit = DASHBOARD_EVENTS_LIMIT,
+  } = options;
+
   const leadsQuery = useQuery({
     queryKey: CRM_QUERY_KEYS.dashboardLeads,
     queryFn: getDashboardLeadsDataset,
+    enabled: includeLeads,
     staleTime: 30_000,
   });
 
   const tasksQuery = useQuery({
     queryKey: CRM_QUERY_KEYS.dashboardTasks,
     queryFn: getDashboardTasksDataset,
+    enabled: includeTasks,
     staleTime: 30_000,
   });
 
   const eventsQuery = useQuery({
     queryKey: CRM_QUERY_KEYS.dashboardEvents,
-    queryFn: () => getDashboardEventsDataset(8),
+    queryFn: () => getDashboardEventsDataset(eventsLimit),
+    enabled: includeEvents,
     staleTime: 20_000,
   });
 
   const analyticsQuery = useQuery({
     queryKey: CRM_QUERY_KEYS.dashboardAnalytics,
-    queryFn: () => getDashboardAnalyticsDataset(ANALYTICS_WINDOW_DAYS),
+    queryFn: () => getDashboardAnalyticsDataset(analyticsWindowDays),
+    enabled: includeAnalytics,
     staleTime: 20_000,
   });
 
@@ -55,7 +78,7 @@ export function useCrmDashboardData() {
   const sourceData = leadsQuery.data ? buildSourceDistribution(leadsQuery.data) : [];
   const analyticsFunnelData = analyticsQuery.data ? buildAnalyticsFunnel(analyticsQuery.data) : [];
   const analyticsSeriesData = analyticsQuery.data
-    ? buildAnalyticsSeries(analyticsQuery.data, ANALYTICS_WINDOW_DAYS)
+    ? buildAnalyticsSeries(analyticsQuery.data, analyticsWindowDays)
     : [];
   const analyticsSourceData = analyticsQuery.data ? buildAnalyticsSourceDistribution(analyticsQuery.data) : [];
   const trafficVsLeadsData = analyticsQuery.data ? buildTrafficVsLeadsComparison(analyticsQuery.data) : [];
@@ -66,14 +89,15 @@ export function useCrmDashboardData() {
     leadsQuery.data && tasksQuery.data ? buildAttentionPanel(leadsQuery.data, tasksQuery.data) : undefined;
 
   const lastUpdatedAt = Math.max(
-    leadsQuery.dataUpdatedAt || 0,
-    tasksQuery.dataUpdatedAt || 0,
-    eventsQuery.dataUpdatedAt || 0,
-    analyticsQuery.dataUpdatedAt || 0,
+    includeLeads ? leadsQuery.dataUpdatedAt || 0 : 0,
+    includeTasks ? tasksQuery.dataUpdatedAt || 0 : 0,
+    includeEvents ? eventsQuery.dataUpdatedAt || 0 : 0,
+    includeAnalytics ? analyticsQuery.dataUpdatedAt || 0 : 0,
   );
 
   return {
-    analyticsWindowDays: ANALYTICS_WINDOW_DAYS,
+    analyticsWindowDays,
+    eventsLimit,
     leadsQuery,
     tasksQuery,
     eventsQuery,

@@ -1,15 +1,10 @@
 import { useDeferredValue, useState } from "react";
-import {
-  LEAD_OWNER_FILTER_ALL,
-  LEAD_SOURCE_FILTER_ALL,
-  type LeadPageSize,
-  type LeadOwnerFilter,
-  type LeadPeriodFilter,
-  type LeadSortOption,
-  type LeadSourceFilter,
-  type LeadsViewMode,
-  type LeadStageFilter,
-} from "@/lib/crmLeadPresentation";
+import { LEAD_OWNER_FILTER_ALL, type LeadOwnerFilter } from "@/lib/crmLeadPresentation/owners";
+import { LEAD_SOURCE_FILTER_ALL, type LeadSourceFilter } from "@/lib/crmLeadPresentation/sources";
+import { type LeadPeriodFilter, type LeadsViewMode } from "@/lib/crmLeadPresentation/filters";
+import { type LeadPageSize } from "@/lib/crmLeadPresentation/pagination";
+import { type LeadSortOption } from "@/lib/crmLeadPresentation/sorting";
+import { type LeadStageFilter } from "@/lib/crmLeadPresentation/stages";
 
 export function useLeadsListState() {
   const [searchTerm, setSearchTerm] = useState("");

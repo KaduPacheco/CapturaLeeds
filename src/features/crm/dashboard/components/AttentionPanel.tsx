@@ -23,7 +23,7 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
       {data.metrics.map((metric) => (
         <div
           key={metric.id}
-          className={`rounded-[24px] border px-4 py-4 ${
+          className={`rounded-[22px] border px-4 py-3.5 ${
             metric.tone === "danger"
               ? "border-destructive/20 bg-destructive/6"
               : metric.tone === "warning"
@@ -31,18 +31,18 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
                 : "border-secondary/20 bg-secondary/6"
           }`}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {metric.label}
               </p>
-              <p className="text-3xl font-semibold tracking-tight text-foreground">{metric.count}</p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">{metric.count}</p>
             </div>
-            <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="shrink-0 rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {metric.count > 0 ? "Acao" : "Ok"}
             </span>
           </div>
-          <p className="mt-2 max-w-[28ch] text-xs leading-5 text-muted-foreground">{metric.description}</p>
+          <p className="mt-1.5 text-[11px] leading-4 text-muted-foreground">{metric.description}</p>
         </div>
       ))}
     </div>
@@ -75,9 +75,9 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
           description="Quando o CRM tiver dados suficientes, os alertas operacionais aparecerao aqui."
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className="rounded-[28px] border border-destructive/15 bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.16),transparent_42%),linear-gradient(135deg,rgba(15,23,42,0.96),rgba(15,23,42,0.82))] p-5 shadow-[0_20px_60px_-42px_rgba(239,68,68,0.45)] sm:p-6">
-            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.35fr),minmax(240px,0.65fr)] 2xl:items-end">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),minmax(220px,0.65fr)] xl:items-end">
               <div className="space-y-3">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/72">
                   <CircleAlert className="h-3.5 w-3.5 text-destructive" />
@@ -94,7 +94,7 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
               </div>
 
               {data.overdueTasksPreview.length > 0 ? (
-                <div className="rounded-[24px] border border-white/10 bg-white/6 p-4 backdrop-blur">
+                <div className="rounded-[22px] border border-white/10 bg-white/6 p-4 backdrop-blur">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300">
                     Follow-ups vencidos
                   </p>
@@ -113,7 +113,7 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
             <div className="space-y-4">
               {metricsGrid}
               <div className="rounded-[28px] border border-border/70 bg-muted/[0.18] p-4 sm:p-5">
-                <div className="mb-4 space-y-1">
+                <div className="mb-3 space-y-1">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CircleAlert className="h-4 w-4 text-destructive" />
                     Tarefas vencidas com maior urgencia
@@ -122,12 +122,12 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
                     Itens com prazo vencido.
                   </p>
                 </div>
-                <div className="grid gap-3 2xl:grid-cols-2">
+                <div className="grid gap-3 xl:grid-cols-2">
                   {data.overdueTasksPreview.map((task) => (
                     <Link
                       key={task.id}
                       to={`/crm/leads/${task.leadId}`}
-                      className="flex items-start justify-between gap-3 rounded-[22px] border border-destructive/12 bg-background/80 px-4 py-3 transition-colors hover:border-destructive/25 hover:bg-destructive/[0.06]"
+                      className="flex items-start justify-between gap-3 rounded-[20px] border border-destructive/12 bg-background/80 px-4 py-3 transition-colors hover:border-destructive/25 hover:bg-destructive/[0.06]"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">{task.title}</p>
@@ -136,7 +136,7 @@ const AttentionPanel = ({ data, isLoading, errorMessage }: AttentionPanelProps) 
                           {task.company ? ` - ${task.company}` : ""}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full border border-destructive/15 bg-destructive/8 px-2.5 py-1 text-[11px] font-semibold text-destructive">
+                      <span className="shrink-0 rounded-full border border-destructive/15 bg-destructive/8 px-2.5 py-1 text-[10px] font-semibold text-destructive">
                         {formatDate(task.dueDate)}
                       </span>
                     </Link>

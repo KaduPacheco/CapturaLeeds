@@ -1,4 +1,4 @@
-import LeadStageBadge from "@/components/crm/LeadStageBadge";
+import LeadStageBadge from "@/features/crm/shared/components/LeadStageBadge";
 import LeadDetailField from "@/features/crm/leads/detail/components/LeadDetailField";
 import type { CrmLead } from "@/types/crm";
 

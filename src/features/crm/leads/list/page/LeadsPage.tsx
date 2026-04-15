@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, RefreshCcw } from "lucide-react";
-import LeadStageBadge from "@/components/crm/LeadStageBadge";
+import LeadStageBadge from "@/features/crm/shared/components/LeadStageBadge";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { CRM_QUERY_KEYS } from "@/features/crm/shared/queryKeys/crmQueryKeys";
@@ -11,7 +11,7 @@ import LeadsResultsTable from "@/features/crm/leads/list/components/LeadsResults
 import LeadsWorkspaceToolbar from "@/features/crm/leads/list/components/LeadsWorkspaceToolbar";
 import { useLeadsListState } from "@/features/crm/leads/list/hooks/useLeadsListState";
 import { selectLeadsListViewModel } from "@/features/crm/leads/list/selectors/leadListSelectors";
-import { getCrmLeads, getLeadTasksOverview } from "@/services/crmService";
+import { getCrmLeads, getLeadTasksOverview } from "@/features/crm/leads/shared/services/crmService";
 
 const LeadsPage = () => {
   const { user } = useAuth();

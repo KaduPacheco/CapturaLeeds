@@ -7,6 +7,7 @@ import {
   CalendarClock,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/features/crm/auth/hooks/useAuth";
 import { useCrmDashboardData } from "@/features/crm/dashboard/useCrmDashboardData";
 import { CRM_ROUTES } from "@/features/crm/shared/constants/routes";
 import { formatDateTimePtBr } from "@/features/crm/shared/formatters/dateTime";
@@ -20,14 +21,21 @@ import {
 import { Button } from "@/components/ui/Button";
 
 const OperacaoPage = () => {
+  const { hasPermission } = useAuth();
   const { leadsQuery, tasksQuery, leadMetrics, taskMetrics, pipelineData, sourceData, lastUpdatedAt } =
-    useCrmDashboardData();
+    useCrmDashboardData({
+      includeLeads: true,
+      includeTasks: true,
+      includeEvents: false,
+      includeAnalytics: false,
+    });
+  const canReadLeads = hasPermission("crm:leads:read");
 
   return (
     <div className="space-y-8 lg:space-y-10">
       <section className="relative overflow-hidden rounded-[36px] border border-border/70 bg-card shadow-[0_32px_90px_-54px_rgba(15,23,42,0.58)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,118,110,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.14),transparent_40%)]" />
-        <div className="relative grid gap-6 px-6 py-6 sm:px-7 sm:py-7 xl:grid-cols-[minmax(0,1.35fr),minmax(280px,332px)] xl:items-end xl:px-8 xl:py-8">
+        <div className="relative grid gap-6 px-6 py-6 sm:px-7 sm:py-7 xl:grid-cols-[minmax(0,1.3fr),minmax(320px,380px)] xl:items-stretch xl:px-8 xl:py-8">
           <div className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
               <BriefcaseBusiness className="h-3.5 w-3.5" />
@@ -69,12 +77,14 @@ const OperacaoPage = () => {
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild className="h-auto w-full justify-between rounded-2xl px-4 py-3.5">
-                  <Link to={CRM_ROUTES.leads}>
-                    Abrir leads
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+                {canReadLeads ? (
+                  <Button asChild className="h-auto w-full justify-between rounded-2xl px-4 py-3.5">
+                    <Link to={CRM_ROUTES.leads}>
+                      Abrir leads
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -162,12 +172,14 @@ const OperacaoPage = () => {
               </p>
             </div>
 
-            <Button asChild className="h-auto rounded-2xl px-4 py-3.5">
-              <Link to={CRM_ROUTES.leads}>
-                <Users className="h-4 w-4" />
-                Abrir leads
-              </Link>
-            </Button>
+            {canReadLeads ? (
+              <Button asChild className="h-auto rounded-2xl px-4 py-3.5">
+                <Link to={CRM_ROUTES.leads}>
+                  <Users className="h-4 w-4" />
+                  Abrir leads
+                </Link>
+              </Button>
+            ) : null}
           </div>
         </div>
       </DashboardClusterShell>

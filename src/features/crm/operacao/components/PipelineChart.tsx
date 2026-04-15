@@ -29,7 +29,7 @@ const PipelineChart = ({ data, isLoading, errorMessage }: PipelineChartProps) =>
       subtitle="Estagios atuais da carteira."
     >
       {isLoading ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),232px]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr),260px]">
           <div className="h-[280px] animate-pulse rounded-3xl bg-muted/40" />
           <div className="rounded-3xl border border-border/60 bg-muted/15 p-3.5">
             <div className="space-y-2.5">
@@ -51,7 +51,7 @@ const PipelineChart = ({ data, isLoading, errorMessage }: PipelineChartProps) =>
           icon={<ChartNoAxesColumn className="h-5 w-5" />}
         />
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),232px]">
+        <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr),260px]">
           <div className="h-[280px] rounded-3xl border border-border/60 bg-muted/[0.12] p-3 sm:p-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical" margin={{ top: 8, right: 10, left: 0, bottom: 4 }}>
@@ -87,7 +87,7 @@ const PipelineChart = ({ data, isLoading, errorMessage }: PipelineChartProps) =>
             <div className="mb-3 px-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Estagios</p>
             </div>
-            <div className="space-y-2.5">
+            <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-1">
               {data.map((entry) => (
                 <CompactBreakdownRow
                   key={entry.id}
@@ -117,15 +117,17 @@ function CompactBreakdownRow({
   detail: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-border/60 bg-background/70 px-3 py-3">
+    <div className="rounded-[20px] border border-border/60 bg-background/70 px-3 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
           <span className="truncate text-sm font-medium text-foreground">{label}</span>
         </div>
-        <span className="text-sm font-semibold text-foreground">{value}</span>
+        <div className="shrink-0 text-right">
+          <span className="block text-sm font-semibold text-foreground">{value}</span>
+          <span className="text-[10px] text-muted-foreground">{detail.replace(" da base total", "")}</span>
+        </div>
       </div>
-      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{detail}</p>
     </div>
   );
 }

@@ -5,18 +5,18 @@ import {
   LEAD_OWNER_FILTER_ALL,
   LEAD_OWNER_FILTER_MINE,
   LEAD_OWNER_FILTER_UNASSIGNED,
+  getOwnerFilterValueForId,
+  type LeadOwnerFilter,
+} from "@/lib/crmLeadPresentation/owners";
+import {
   LEAD_SOURCE_FILTER_ALL,
   LEAD_SOURCE_FILTER_WITHOUT_SOURCE,
-  PIPELINE_STAGE_OPTIONS,
   getLeadSourceFilterValue,
-  getOwnerFilterValueForId,
-  type LeadPeriodFilter,
-  type LeadOwnerFilter,
-  type LeadSortOption,
   type LeadSourceFilter,
-  type LeadsViewMode,
-  type LeadStageFilter,
-} from "@/lib/crmLeadPresentation";
+} from "@/lib/crmLeadPresentation/sources";
+import { type LeadPeriodFilter, type LeadsViewMode } from "@/lib/crmLeadPresentation/filters";
+import { type LeadSortOption } from "@/lib/crmLeadPresentation/sorting";
+import { PIPELINE_STAGE_OPTIONS, type LeadStageFilter } from "@/lib/crmLeadPresentation/stages";
 import { CrmOwnerOption, CrmSourceOption } from "@/types/crm";
 import { cn } from "@/utils/cn";
 

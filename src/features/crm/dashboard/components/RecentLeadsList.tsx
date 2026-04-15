@@ -47,18 +47,26 @@ const RecentLeadsList = ({ data, isLoading, errorMessage }: RecentLeadsListProps
             <Link
               key={lead.id}
               to={`/crm/leads/${lead.id}`}
-              className="block min-h-[100px] rounded-[22px] border border-border/65 bg-muted/[0.12] px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
+              className="block rounded-[20px] border border-border/65 bg-muted/[0.12] px-4 py-3.5 transition-colors hover:border-primary/30 hover:bg-primary/5"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 space-y-2">
-                  <p className="truncate text-sm font-semibold text-foreground">{lead.name}</p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="truncate text-sm font-semibold text-foreground">{lead.name}</p>
+                    <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                      {lead.stageLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Building2 className="h-3.5 w-3.5" />
                     <span className="truncate">{lead.company || "Empresa nao informada"}</span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-muted-foreground">
-                    <span className="rounded-full border border-border/70 bg-background/55 px-2.5 py-1 text-[11px] font-medium text-foreground/85">
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground">
+                    <span
+                      className="max-w-[22ch] truncate rounded-full border border-border/70 bg-background/55 px-2.5 py-1 text-[10px] font-medium text-foreground/85"
+                      title={lead.source}
+                    >
                       {lead.source}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
@@ -67,10 +75,6 @@ const RecentLeadsList = ({ data, isLoading, errorMessage }: RecentLeadsListProps
                     </span>
                   </div>
                 </div>
-
-                <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                  {lead.stageLabel}
-                </span>
               </div>
             </Link>
           ))}

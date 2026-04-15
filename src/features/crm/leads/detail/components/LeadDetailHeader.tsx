@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import LeadStageBadge from "@/components/crm/LeadStageBadge";
+import LeadStageBadge from "@/features/crm/shared/components/LeadStageBadge";
 import type { CrmLead } from "@/types/crm";
 
 interface LeadDetailHeaderProps {

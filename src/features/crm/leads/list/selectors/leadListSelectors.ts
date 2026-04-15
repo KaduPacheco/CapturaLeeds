@@ -1,20 +1,11 @@
 import type { User } from "@supabase/supabase-js";
 import type { CrmLead, CrmLeadTaskOverview, CrmOwnerOption, CrmSourceOption } from "@/types/crm";
-import {
-  LEAD_OWNER_FILTER_ALL,
-  LEAD_SOURCE_FILTER_ALL,
-  buildLeadTaskSummary,
-  buildOwnerLabelMap,
-  buildOwnerOptions,
-  buildSourceOptions,
-  filterLeadRows,
-  paginateCollection,
-  sortLeadRows,
-  type LeadListFilters,
-  type LeadTaskStatusSummary,
-  type LeadPageSize,
-  type LeadSortOption,
-} from "@/lib/crmLeadPresentation";
+import { LEAD_OWNER_FILTER_ALL, buildOwnerLabelMap, buildOwnerOptions } from "@/lib/crmLeadPresentation/owners";
+import { LEAD_SOURCE_FILTER_ALL, buildSourceOptions } from "@/lib/crmLeadPresentation/sources";
+import { filterLeadRows, type LeadListFilters } from "@/lib/crmLeadPresentation/filters";
+import { paginateCollection, type LeadPageSize } from "@/lib/crmLeadPresentation/pagination";
+import { sortLeadRows, type LeadSortOption } from "@/lib/crmLeadPresentation/sorting";
+import { buildLeadTaskSummary, type LeadTaskStatusSummary } from "@/lib/crmLeadPresentation/taskSummary";
 
 export interface LeadWithSummary {
   lead: CrmLead;

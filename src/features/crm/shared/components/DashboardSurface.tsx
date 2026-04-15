@@ -32,7 +32,7 @@ export function DashboardClusterShell({
   return (
     <section
       className={cn(
-        "rounded-[32px] border border-border/70 p-4 shadow-[0_24px_80px_-52px_rgba(15,23,42,0.6)] backdrop-blur sm:p-6 xl:p-7 2xl:p-8",
+        "rounded-[32px] border border-border/70 p-4 shadow-[0_24px_80px_-52px_rgba(15,23,42,0.6)] backdrop-blur sm:p-5 xl:p-6 2xl:p-7",
         tone === "muted"
           ? "bg-muted/[0.16]"
           : tone === "subtle"
@@ -42,7 +42,7 @@ export function DashboardClusterShell({
       )}
     >
       <DashboardClusterIntro eyebrow={eyebrow} title={title} description={description} />
-      <div className={cn("mt-4 sm:mt-6", contentClassName)}>{children}</div>
+      <div className={cn("mt-4 sm:mt-5", contentClassName)}>{children}</div>
     </section>
   );
 }
@@ -58,19 +58,19 @@ export function DashboardMetricRail({
   return (
     <div
       className={cn(
-        "h-full rounded-[28px] border border-border/70 bg-background/[0.38] p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.55)] sm:p-5 xl:p-6",
+        "h-full rounded-[28px] border border-border/70 bg-background/[0.38] p-4 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.55)] sm:p-5",
         className,
       )}
     >
-      <div className="mb-4 max-w-xl space-y-1.5 border-b border-border/60 pb-4 sm:mb-5">
+      <div className="mb-4 max-w-xl space-y-1 border-b border-border/60 pb-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{eyebrow}</p>
         <div className="space-y-1">
           <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
-          <p className="text-xs leading-5 text-muted-foreground sm:text-sm">{description}</p>
+          <p className="text-xs leading-5 text-muted-foreground">{description}</p>
         </div>
       </div>
 
-      <div className={cn("grid gap-4 sm:grid-cols-2", columnsClassName)}>{children}</div>
+      <div className={cn("grid gap-3.5 sm:grid-cols-2", columnsClassName)}>{children}</div>
     </div>
   );
 }
@@ -85,9 +85,9 @@ function DashboardClusterIntro({
   description: string;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 px-1">
+    <div className="flex flex-col gap-2 px-1">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
-      <div className="max-w-3xl space-y-1.5">
+      <div className="max-w-3xl space-y-1">
         <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{title}</h2>
         <p className="max-w-3xl text-xs leading-5 text-muted-foreground sm:text-sm">{description}</p>
       </div>

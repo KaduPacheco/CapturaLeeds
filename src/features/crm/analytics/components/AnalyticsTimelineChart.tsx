@@ -125,19 +125,19 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <SummaryCard
-              label="Visitors no periodo"
+              label="Visitors"
               value={data.reduce((sum, entry) => sum + entry.visitors, 0)}
-              helper="Soma dos visitors unicos por dia."
+              helper="Unicos no periodo."
             />
             <SummaryCard
-              label="Conversoes no periodo"
+              label="Conversoes"
               value={data.reduce((sum, entry) => sum + entry.leads, 0)}
-              helper="Envios com sucesso registrados no periodo."
+              helper="Envios concluidos."
             />
             <SummaryCard
-              label="Melhor dia de conversao"
+              label="Melhor dia"
               value={`${getBestConversionRate(data)}%`}
-              helper="Maior taxa diaria com base em visitors reais."
+              helper="Pico de conversao."
             />
           </div>
         </div>
@@ -149,9 +149,9 @@ const AnalyticsTimelineChart = ({ data, isLoading, errorMessage }: AnalyticsTime
 function SummaryCard({ label, value, helper }: { label: string; value: number | string; helper: string }) {
   return (
     <div className="rounded-2xl border border-border/60 bg-muted/[0.14] px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{helper}</p>
+      <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{helper}</p>
     </div>
   );
 }

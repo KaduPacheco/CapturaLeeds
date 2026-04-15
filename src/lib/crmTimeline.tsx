@@ -13,8 +13,8 @@ import {
 } from "@/types/crm";
 import {
   getLeadStageOptionLabel,
-  getOwnerDisplayLabel,
-} from "@/lib/crmLeadPresentation";
+} from "@/lib/crmLeadPresentation/stages";
+import { getOwnerDisplayLabel } from "@/lib/crmLeadPresentation/owners";
 
 export interface TimelineItem {
   id: string;

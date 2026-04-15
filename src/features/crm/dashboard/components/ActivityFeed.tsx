@@ -47,7 +47,7 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
           icon={<History className="h-5 w-5" />}
         />
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {data.map((item, index) => (
             <div key={item.id} className="relative pl-11 sm:pl-12">
               {index < data.length - 1 ? (
@@ -62,10 +62,13 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
               </div>
 
               <div className="rounded-2xl px-1 py-3 sm:py-3.5">
-                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                <div className="mb-2 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTime(item.occurredAt)}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{formatDateTime(item.occurredAt)}</span>
+                      {item.company ? <span className="truncate">{item.company}</span> : null}
+                    </div>
                   </div>
                   <Link
                     to={`/crm/leads/${item.leadId}`}
@@ -76,7 +79,6 @@ const ActivityFeed = ({ data, isLoading, errorMessage }: ActivityFeedProps) => {
                   </Link>
                 </div>
                 <p className="text-sm leading-5 text-muted-foreground">{item.description}</p>
-                {item.company ? <p className="mt-1.5 text-xs text-muted-foreground">{item.company}</p> : null}
               </div>
             </div>
           ))}

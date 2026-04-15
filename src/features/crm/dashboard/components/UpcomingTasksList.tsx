@@ -48,18 +48,32 @@ const UpcomingTasksList = ({ data, isLoading, errorMessage }: UpcomingTasksListP
             <Link
               key={task.id}
               to={`/crm/leads/${task.leadId}`}
-              className="block min-h-[100px] rounded-[22px] border border-border/65 bg-muted/[0.12] px-4 py-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
+              className="block rounded-[20px] border border-border/65 bg-muted/[0.12] px-4 py-3.5 transition-colors hover:border-primary/30 hover:bg-primary/5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-2">
-                  <p className="truncate text-sm font-semibold text-foreground">{task.title}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="truncate text-sm font-semibold text-foreground">{task.title}</p>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                        task.overdue
+                          ? "border border-destructive/20 bg-destructive/10 text-destructive"
+                          : "border border-secondary/20 bg-secondary/10 text-secondary"
+                      }`}
+                    >
+                      {task.overdue ? "Atrasada" : "No prazo"}
+                    </span>
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {task.leadName}
                     {task.company ? ` - ${task.company}` : ""}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-muted-foreground">
-                    <span className="rounded-full border border-border/70 bg-background/55 px-2.5 py-1 text-[11px] font-medium text-foreground/85">
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground">
+                    <span
+                      className="max-w-[20ch] truncate rounded-full border border-border/70 bg-background/55 px-2.5 py-1 text-[10px] font-medium text-foreground/85"
+                      title={task.stageLabel}
+                    >
                       {task.stageLabel}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
@@ -72,16 +86,6 @@ const UpcomingTasksList = ({ data, isLoading, errorMessage }: UpcomingTasksListP
                     </span>
                   </div>
                 </div>
-
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                    task.overdue
-                      ? "border border-destructive/20 bg-destructive/10 text-destructive"
-                      : "border border-secondary/20 bg-secondary/10 text-secondary"
-                  }`}
-                >
-                  {task.overdue ? "Atrasada" : "No prazo"}
-                </span>
               </div>
             </Link>
           ))}

@@ -1,16 +1,13 @@
 import type { User } from "@supabase/supabase-js";
 import type { CrmLead, CrmLeadEvent, CrmLeadNote, CrmLeadTask, CrmOwnerOption, PipelineStage } from "@/types/crm";
 import { buildLeadTimelineItems } from "@/lib/crmTimeline";
+import { buildOwnerLabelMap, buildOwnerOptions, getOwnerDisplayLabel } from "@/lib/crmLeadPresentation/owners";
 import {
   PIPELINE_STAGE_OPTIONS,
-  buildLeadTaskSummary,
-  buildOwnerLabelMap,
-  buildOwnerOptions,
-  formatTaskDueDate,
   getLeadStageOptionLabel,
   getLeadStageValue,
-  getOwnerDisplayLabel,
-} from "@/lib/crmLeadPresentation";
+} from "@/lib/crmLeadPresentation/stages";
+import { buildLeadTaskSummary, formatTaskDueDate } from "@/lib/crmLeadPresentation/taskSummary";
 
 export interface LeadDetailViewModel {
   taskSummary: ReturnType<typeof buildLeadTaskSummary>;

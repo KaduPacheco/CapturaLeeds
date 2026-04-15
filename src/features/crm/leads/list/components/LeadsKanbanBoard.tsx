@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarClock } from "lucide-react";
-import LeadStageBadge from "@/components/crm/LeadStageBadge";
-import {
-  formatTaskDueDate,
-  getLeadOperationalPriority,
-  getLeadSourceLabel,
-  getLeadStageValue,
-  getOwnerDisplayLabel,
-} from "@/lib/crmLeadPresentation";
+import LeadStageBadge from "@/features/crm/shared/components/LeadStageBadge";
+import { getOwnerDisplayLabel } from "@/lib/crmLeadPresentation/owners";
+import { getLeadOperationalPriority } from "@/lib/crmLeadPresentation/priority";
+import { getLeadSourceLabel } from "@/lib/crmLeadPresentation/sources";
+import { getLeadStageValue } from "@/lib/crmLeadPresentation/stages";
+import { formatTaskDueDate } from "@/lib/crmLeadPresentation/taskSummary";
 import { PipelineStage } from "@/types/crm";
 import { cn } from "@/utils/cn";
 import type { LeadWithSummary } from "@/features/crm/leads/list/selectors/leadListSelectors";

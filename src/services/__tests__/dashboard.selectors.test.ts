@@ -202,4 +202,49 @@ describe("dashboard selectors", () => {
     expect(attentionPanel.overdueTasksPreview).toHaveLength(1);
     expect(attentionPanel.overdueTasksPreview[0]).toMatchObject({ id: "task-1", title: "Retornar contato" });
   });
+
+  it("collapses long source tails into 'Outros' without changing the top ordering", () => {
+    const expandedLeads = [
+      ...leads,
+      { ...leads[0], id: "lead-4", origem: "Google Ads" },
+      { ...leads[0], id: "lead-5", origem: "LinkedIn" },
+      { ...leads[0], id: "lead-6", origem: "Parceiros" },
+      { ...leads[0], id: "lead-7", origem: "Feira" },
+      { ...leads[0], id: "lead-8", origem: "Email" },
+      { ...leads[0], id: "lead-9", origem: "Podcast" },
+    ];
+
+    const distribution = buildSourceDistribution(expandedLeads);
+
+    expect(distribution).toHaveLength(7);
+    expect(distribution.slice(0, 6).map((entry) => entry.label)).toEqual([
+      "Meta Ads",
+      "Nao informado",
+      "Indicacao",
+      "Google Ads",
+      "LinkedIn",
+      "Parceiros",
+    ]);
+    expect(distribution[6]).toMatchObject({
+      label: "Outros",
+      value: 3,
+      percentage: 33.3,
+    });
+  });
+
+  it("limits the overdue preview to four tasks while preserving overdue-only attention counts", () => {
+    const manyOverdueTasks = [
+      ...tasks,
+      { ...tasks[0], id: "task-4", lead_id: "lead-1", due_date: "2026-04-10T09:00:00.000Z" },
+      { ...tasks[0], id: "task-5", lead_id: "lead-2", due_date: "2026-04-09T09:00:00.000Z" },
+      { ...tasks[0], id: "task-6", lead_id: "lead-3", due_date: "2026-04-08T09:00:00.000Z" },
+      { ...tasks[0], id: "task-7", lead_id: "lead-1", due_date: "2026-04-07T09:00:00.000Z" },
+    ];
+
+    const attentionPanel = buildAttentionPanel(leads, manyOverdueTasks);
+
+    expect(attentionPanel.metrics.find((metric) => metric.id === "overdue_tasks")?.count).toBe(5);
+    expect(attentionPanel.overdueTasksPreview).toHaveLength(4);
+    expect(attentionPanel.overdueTasksPreview.every((task) => task.overdue)).toBe(true);
+  });
 });
