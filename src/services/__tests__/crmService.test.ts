@@ -18,6 +18,12 @@ vi.mock("@/lib/supabase", () => ({
   },
 }));
 
+vi.mock("@/infra/supabase/client", () => ({
+  supabase: {
+    from: fromMock,
+  },
+}));
+
 import { logLeadEvent } from "../crmService";
 
 describe("crmService - audit log", () => {
