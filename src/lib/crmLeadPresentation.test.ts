@@ -76,6 +76,7 @@ describe("crmLeadPresentation", () => {
   it("returns the current stage label or the fallback label", () => {
     expect(getLeadStageLabel(createLead({ pipeline_stage: "ganho" }))).toBe("Ganho");
     expect(getLeadStageLabel(createLead({ pipeline_stage: null, status: "" }))).toBe("Sem etapa");
+    expect(getLeadStageLabel(createLead({ pipeline_stage: null, status: " em_contato " }))).toBe("Em contato");
   });
 
   it("summarizes open, overdue and next tasks without counting completed tasks", () => {
@@ -93,6 +94,19 @@ describe("crmLeadPresentation", () => {
     expect(summary.nextTask?.id).toBe("task-overdue");
 
     vi.useRealTimers();
+  });
+
+  it("returns an empty task summary when every task is already completed", () => {
+    const summary = buildLeadTaskSummary([
+      createTask({ id: "task-done-1", completed: true }),
+      createTask({ id: "task-done-2", completed: true, due_date: "2026-04-12T10:00:00.000Z" }),
+    ]);
+
+    expect(summary).toEqual({
+      openCount: 0,
+      overdueCount: 0,
+      nextTask: null,
+    });
   });
 
   it("filters rows by owner, source, period and search term while preserving current rules", () => {
@@ -156,6 +170,31 @@ describe("crmLeadPresentation", () => {
     expect(filteredOperationalGap.map((row) => row.lead.id)).toEqual(["lead-unassigned"]);
 
     vi.useRealTimers();
+  });
+
+  it("filters by explicit stage and keeps accent-insensitive search behavior", () => {
+    const rows = [
+      createRow({
+        id: "lead-qualified",
+        nome: "Joao Qualificado",
+        pipeline_stage: "qualificado",
+        status: "novo",
+      }),
+      createRow({
+        id: "lead-won",
+        nome: "José Convertido",
+        pipeline_stage: "ganho",
+        status: "ganho",
+      }),
+    ];
+
+    const filteredRows = filterLeadRows(rows, {
+      ...defaultFilters,
+      stageFilter: "ganho",
+      searchTerm: "jose",
+    });
+
+    expect(filteredRows.map((row) => row.lead.id)).toEqual(["lead-won"]);
   });
 
   it("sorts by priority to surface overdue and structurally incomplete leads first", () => {
@@ -225,6 +264,22 @@ describe("crmLeadPresentation", () => {
     ]);
   });
 
+  it("sorts alphabetically when requested and preserves locale-aware labels", () => {
+    const rows = [
+      createRow({ id: "lead-z", nome: "Zuleica" }),
+      createRow({ id: "lead-a", nome: "Ana" }),
+      createRow({ id: "lead-c", nome: "Caio" }),
+    ];
+
+    const sorted = sortLeadRows(rows, "name_asc");
+
+    expect(sorted.map((row) => row.lead.id)).toEqual([
+      "lead-a",
+      "lead-c",
+      "lead-z",
+    ]);
+  });
+
   it("builds operational priorities for overdue, unassigned and won leads", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-13T12:00:00.000Z"));
@@ -260,6 +315,20 @@ describe("crmLeadPresentation", () => {
       startIndex: 4,
       endIndex: 5,
       items: ["e"],
+    });
+  });
+
+  it("normalizes invalid pagination bounds without changing collection semantics", () => {
+    const result = paginateCollection(["a", "b", "c"], 0, 0);
+
+    expect(result).toEqual({
+      currentPage: 1,
+      pageSize: 1,
+      totalItems: 3,
+      totalPages: 3,
+      startIndex: 0,
+      endIndex: 1,
+      items: ["a"],
     });
   });
 });
