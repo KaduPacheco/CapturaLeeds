@@ -1,22 +1,24 @@
-# Configuração do Administrador Inicial (Supabase Auth)
+# Configuracao do Administrador Inicial
 
-Como a Etapa 2 implementou a autenticação real, você precisa criar o primeiro usuário para acessar o CRM.
+Use este procedimento somente no projeto Supabase vinculado a este repositorio.
 
-## 🚀 Como criar o Admin
+## Como criar o primeiro usuario
 
-1. Acesse o [Dashboard do Supabase](https://app.supabase.com/).
-2. Selecione o seu projeto.
-3. No menu lateral esquerdo, clique em **Authentication**.
-4. Clique no botão **Add User** > **Create new user**.
-5. Preencha o **E-mail** e a **Senha**.
-6. (Opcional) Desmarque "Send invitation email" se quiser que o usuário fique ativo imediatamente sem confirmar e-mail.
-7. Clique em **Confirm**.
+1. Acesse `https://app.supabase.com/`.
+2. Selecione o projeto correto deste ambiente.
+3. Abra `Authentication`.
+4. Clique em `Add User` > `Create new user`.
+5. Preencha e-mail e senha.
+6. Se quiser ativacao imediata, desmarque o envio de convite por e-mail.
+7. Confirme a criacao.
 
-## 🔐 Acesso ao Sistema
+## Acesso local
 
-Após criar o usuário, você poderá acessar:
-- **URL**: `http://localhost:5173/crm/login`
-- Use as credenciais que você acabou de criar.
+- URL local: `http://localhost:8080/crm/login`
+- Use as credenciais criadas no projeto selecionado.
 
-## ⚠️ Regras de Segurança
-Nesta etapa, qualquer usuário criado no Supabase Auth terá acesso ao `/crm`. Em etapas futuras, implementaremos **Roles (RBAC)** para restringir o acesso apenas a usuários com flag `admin` no banco de dados.
+## Regras de seguranca
+
+- Nao reutilize `Site URL`, `Redirect URLs` ou templates de e-mail de outro ambiente.
+- Valide se os callbacks do Supabase Auth apontam apenas para os dominios esperados deste deploy.
+- Revise os papeis e permissoes do usuario criado antes de liberar o acesso operacional.
