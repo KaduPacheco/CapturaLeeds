@@ -1,26 +1,30 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { MonitorSmartphone, FileText, Settings, ShieldCheck } from "lucide-react";
+import { BarChart3, ClipboardList, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 const solutions = [
   {
-    icon: MonitorSmartphone,
-    title: "Registro Multiplataforma",
-    description: "Web, celular ou tablet. Registro de ponto com geolocalização e reconhecimento facial para evitar fraudes.",
+    icon: ClipboardList,
+    title: "Registro e acompanhamento da jornada",
+    description:
+      "Centralize informações da rotina da equipe em uma única plataforma, com menos dependência de controles paralelos.",
   },
   {
-    icon: FileText,
-    title: "Fechamento Inteligente",
-    description: "Relatórios de jornada, horas extras e banco de horas calculados automaticamente em poucos cliques.",
+    icon: BarChart3,
+    title: "Menos esforço no fechamento",
+    description:
+      "Organize horas extras, banco de horas, faltas e ajustes com mais clareza para o fechamento da folha.",
   },
   {
-    icon: Settings,
-    title: "Gestão Unificada",
-    description: "Painel centralizado onde o gestor aprova atestados, ajustes manuais e acompanha a equipe em tempo real.",
+    icon: LayoutDashboard,
+    title: "Visibilidade para RH e gestão",
+    description:
+      "Dê contexto operacional para quem precisa acompanhar a equipe e agir rápido em desvios da jornada.",
   },
   {
     icon: ShieldCheck,
-    title: "100% Dentro da Lei",
-    description: "Sistema rigorosamente adequado às portarias do Ministério do Trabalho e Emprego (MTE).",
+    title: "Estrutura voltada à rastreabilidade",
+    description:
+      "Conte com recursos voltados à conferência, histórico de alterações e rotinas mais auditáveis.",
   },
 ];
 
@@ -28,32 +32,36 @@ const Solution = () => {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="solucao" className="py-24 bg-background">
+    <section id="solucao" className="bg-background py-24" aria-labelledby="solution-title">
       <div className="container" ref={ref}>
-        <div className="text-center mb-16 max-w-3xl mx-auto">
-          <span className="text-sm font-bold text-primary uppercase tracking-widest">Plataforma Completa</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-3 leading-tight">
-            Tecnologia moderna para <span className="text-primary">simplificar sua gestão de RH</span>
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <span className="text-sm font-bold uppercase tracking-widest text-primary">Como a plataforma ajuda</span>
+          <h2 id="solution-title" className="mt-3 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
+            Mais controle da jornada, menos ruído operacional no RH.
           </h2>
-          <p className="text-lg text-muted-foreground mt-4">
-            Substitua processos manuais por um software desenhado para oferecer segurança, velocidade e clareza.
+          <p className="mt-4 text-lg text-muted-foreground">
+            A proposta é simples: dar previsibilidade para a rotina de ponto e melhorar a qualidade das informações usadas no
+            fechamento e na gestão diária.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-8 lg:gap-12">
-          {solutions.map((s, i) => (
-            <div
-              key={s.title}
-              className={`flex gap-6 p-8 rounded-2xl border border-border bg-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ${isVisible ? (i % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right") : "opacity-0"}`}
-              style={{ animationDelay: `${i * 0.15}s` }}
+
+        <div className="grid gap-8 sm:grid-cols-2">
+          {solutions.map((solution, index) => (
+            <article
+              key={solution.title}
+              className={`flex gap-5 rounded-2xl border border-border bg-card p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+                isVisible ? (index % 2 === 0 ? "animate-slide-in-left" : "animate-slide-in-right") : "opacity-0"
+              }`}
+              style={{ animationDelay: `${index * 0.12}s` }}
             >
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <s.icon className="w-8 h-8 text-primary" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <solution.icon className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <h3 className="font-bold text-xl text-foreground mb-2">{s.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{s.description}</p>
+                <h3 className="mb-3 text-xl font-bold text-foreground">{solution.title}</h3>
+                <p className="leading-7 text-muted-foreground">{solution.description}</p>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

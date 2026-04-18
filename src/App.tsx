@@ -1,10 +1,12 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "./components/ui/Tooltip";
 import { Toaster } from "./components/ui/Toaster";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 
 // Rotas CRM (Isoladas)
 import CrmLayout from "./features/crm/shared/layout/CrmLayout";
@@ -25,9 +27,11 @@ const App = () => {
       <TooltipProvider>
         <BrowserRouter>
           <Routes>
-            {/* Landing Page Pública (Sem peso de Auth) */}
+            {/* Landing pública */}
             <Route path="/" element={<HomePage />} />
-            
+            <Route path="/politica-de-privacidade" element={<PrivacyPage />} />
+            <Route path="/termos-de-uso" element={<TermsPage />} />
+
             {/* Contexto de CRM (Isolado) */}
             <Route path="/crm">
               <Route element={<AuthProvider children={<Outlet />} />}>
@@ -48,7 +52,6 @@ const App = () => {
               </Route>
             </Route>
 
-            {/* Rota não encontrada global */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
@@ -59,11 +62,7 @@ const App = () => {
 };
 
 function renderLazyCrmPage(page: ReactNode) {
-  return (
-    <Suspense fallback={<CrmPageLoadingFallback />}>
-      {page}
-    </Suspense>
-  );
+  return <Suspense fallback={<CrmPageLoadingFallback />}>{page}</Suspense>;
 }
 
 function CrmPageLoadingFallback() {

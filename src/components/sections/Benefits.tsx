@@ -1,26 +1,26 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Zap, ShieldCheck, Users, Timer } from "lucide-react";
+import { BarChart2, Clock3, ScanSearch, Users } from "lucide-react";
 
 const benefits = [
-  { 
-    icon: Timer, 
-    title: "Economia de 80% do tempo", 
-    description: "O que levava dias para ser conferido pelo RH agora é feito em minutos. Foque no estratégico." 
+  {
+    icon: Clock3,
+    title: "Mais agilidade no fechamento",
+    description: "Reduza o tempo gasto com conferências repetitivas e concentre o time no que realmente precisa de análise.",
   },
-  { 
-    icon: Zap, 
-    title: "Fechamento sem erros", 
-    description: "Cálculos matemáticos exatos de adicionais, DSR, faltas e horas extras sem intervenção manual." 
+  {
+    icon: ScanSearch,
+    title: "Menos retrabalho na conferência",
+    description: "Organize a rotina de ajustes e validações com mais contexto, em vez de corrigir tudo na reta final.",
   },
-  { 
-    icon: ShieldCheck, 
-    title: "Minimização de riscos", 
-    description: "Espelhos de ponto confiáveis e histórico inalterável que blindam sua empresa juridicamente." 
+  {
+    icon: BarChart2,
+    title: "Visibilidade em tempo real",
+    description: "Acompanhe indicadores operacionais da jornada e identifique desvios com mais rapidez ao longo do mês.",
   },
-  { 
-    icon: Users, 
-    title: "Engajamento da equipe", 
-    description: "Transparência total para o funcionário, que acompanha seu saldo de horas no próprio celular." 
+  {
+    icon: Users,
+    title: "Mais clareza entre RH e lideranças",
+    description: "Unifique a leitura da jornada para reduzir ruído entre quem opera, aprova e fecha as informações.",
   },
 ];
 
@@ -28,27 +28,34 @@ const Benefits = () => {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="bg-muted/30 py-24" aria-labelledby="benefits-title">
       <div className="container" ref={ref}>
-        <div className="text-center mb-16 max-w-2xl mx-auto">
-          <span className="text-sm font-bold text-secondary uppercase tracking-widest">Retorno sobre investimento</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-3 leading-tight">
-            Por que empresas eficientes <span className="text-secondary">escolhem nosso sistema?</span>
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <span className="text-sm font-bold uppercase tracking-widest text-secondary">Resultados esperados</span>
+          <h2 id="benefits-title" className="mt-3 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
+            O ganho está na rotina: menos esforço, mais previsibilidade.
           </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            A landing deixa claro o que importa para quem compra: controle operacional, rastreabilidade e mais confiança nas
+            decisões ligadas à jornada.
+          </p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {benefits.map((b, i) => (
-            <div
-              key={b.title}
-              className={`text-center p-8 rounded-2xl bg-card border border-border hover:border-secondary/50 shadow-sm hover:shadow-lg transition-all duration-300 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
-              style={{ animationDelay: `${i * 0.15}s` }}
+
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {benefits.map((benefit, index) => (
+            <article
+              key={benefit.title}
+              className={`rounded-2xl border border-border bg-card p-8 text-center shadow-sm transition-all duration-300 hover:border-secondary/40 hover:shadow-lg ${
+                isVisible ? "animate-fade-in-up" : "opacity-0"
+              }`}
+              style={{ animationDelay: `${index * 0.15}s` }}
             >
-              <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-6">
-                <b.icon className="w-8 h-8 text-secondary" />
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/10">
+                <benefit.icon className="h-8 w-8 text-secondary" />
               </div>
-              <h3 className="font-bold text-lg text-foreground mb-3">{b.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{b.description}</p>
-            </div>
+              <h3 className="mb-3 text-lg font-bold text-foreground">{benefit.title}</h3>
+              <p className="leading-7 text-muted-foreground">{benefit.description}</p>
+            </article>
           ))}
         </div>
       </div>

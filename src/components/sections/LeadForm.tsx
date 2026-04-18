@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { CheckCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -12,9 +11,16 @@ import {
   trackLeadFormSubmitSuccess,
 } from "@/services/analyticsService";
 import { submitLeadToSupabase } from "@/services/leadService";
+import { CheckCircle, CheckCircle2, Send } from "lucide-react";
 
 const FORM_ID = "landing_lead_form";
 const SECTION_ID = "contato";
+
+const trustPoints = [
+  "Retorno comercial em até 1 dia útil",
+  "Teste grátis de 14 dias",
+  "Sem alterar a forma como seus leads já são captados",
+] as const;
 
 const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { ref, isVisible } = useScrollAnimation();
@@ -98,7 +104,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         elapsed_ms: getElapsedMs(),
       });
 
-      toast({ title: "Sua solicitacao foi recebida." });
+      toast({ title: "Sua solicitação foi recebida." });
 
       if (onSuccess) {
         onSuccess();
@@ -136,7 +142,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
       toast({
         title: "Cadastro realizado!",
-        description: "Em breve entraremos em contato com voce.",
+        description: "Em breve entraremos em contato com você.",
       });
     } catch (error) {
       void trackLeadFormSubmitError({
@@ -149,7 +155,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
       toast({
         title: "Erro ao enviar",
-        description: "Nao foi possivel enviar seus dados, tente novamente.",
+        description: "Não foi possível enviar seus dados. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -162,42 +168,65 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       <section id="contato" className="bg-hero-gradient py-20">
         <div className="container text-center text-primary-foreground">
           <CheckCircle className="mx-auto mb-6 h-16 w-16 text-secondary" />
-          <h2 className="mb-4 text-3xl font-extrabold">Obrigado pelo interesse!</h2>
-          <p className="text-lg opacity-90">Nossa equipe entrara em contato em ate 24 horas.</p>
+          <h2 className="mb-4 text-3xl font-extrabold">Obrigado pelo interesse.</h2>
+          <p className="text-lg opacity-90">Nossa equipe deve retornar em até 1 dia útil.</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section id="contato" className="bg-hero-gradient py-20">
+    <section id="contato" className="bg-hero-gradient py-20" aria-labelledby="lead-form-title">
       <div className="container" ref={ref}>
-        <div className="mx-auto max-w-lg">
-          <div className={`mb-10 text-center text-primary-foreground ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-            <h2 className="mb-4 text-3xl font-extrabold md:text-4xl">Fale com um Especialista</h2>
-            <p className="mx-auto max-w-sm opacity-90">
-              Descubra como nossa plataforma pode eliminar o trabalho bracal do seu RH. Receba 14 dias de teste gratis.
+        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className={`text-primary-foreground ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">Demonstração e teste</span>
+            <h2 id="lead-form-title" className="mt-4 text-3xl font-extrabold md:text-4xl">
+              Fale com um especialista e veja se a plataforma faz sentido para a sua operação.
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-primary-foreground/84">
+              Preencha seus dados e nossa equipe comercial retorna para entender o cenário da empresa, apresentar a solução e orientar o melhor próximo passo.
             </p>
+
+            <div className="mt-8 space-y-3">
+              {trustPoints.map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                  <p className="text-sm leading-6 text-primary-foreground/90">{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
+
           <form
             onSubmit={handleSubmit}
             onFocusCapture={handleFormStart}
-            className={`rounded-2xl bg-card p-8 shadow-2xl ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
+            className={`rounded-[2rem] bg-card p-8 shadow-2xl md:p-10 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
             style={{ animationDelay: "0.2s" }}
           >
-            <div className="space-y-4">
-              <input
-                type="text"
-                name="bot_field"
-                value={form.bot_field}
-                onChange={(e) => setForm({ ...form, bot_field: e.target.value })}
-                className="absolute -z-10 h-0 w-0 opacity-0"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-              />
-              <div>
-                <label htmlFor="name" className="sr-only">Nome Completo</label>
+            <input
+              type="text"
+              name="bot_field"
+              value={form.bot_field}
+              onChange={(e) => setForm({ ...form, bot_field: e.target.value })}
+              className="absolute -z-10 h-0 w-0 opacity-0"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
+
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-foreground">Solicitar demonstração</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Campos essenciais para nosso time preparar um contato comercial mais útil para a sua realidade.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground">
+                  Nome completo
+                </label>
                 <Input
                   id="name"
                   placeholder="Seu nome completo"
@@ -209,15 +238,22 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                   aria-invalid={!!errors.name}
                   aria-describedby={errors.name ? "name-error" : undefined}
                 />
-                {errors.name && <p id="name-error" className="mt-1 text-xs text-destructive">{errors.name}</p>}
+                {errors.name && (
+                  <p id="name-error" className="mt-1 text-xs text-destructive">
+                    {errors.name}
+                  </p>
+                )}
               </div>
+
               <div>
-                <label htmlFor="whatsapp" className="sr-only">WhatsApp</label>
+                <label htmlFor="whatsapp" className="mb-2 block text-sm font-medium text-foreground">
+                  WhatsApp
+                </label>
                 <Input
                   id="whatsapp"
                   type="tel"
                   inputMode="tel"
-                  placeholder="WhatsApp (ex: 11 99999-9999)"
+                  placeholder="(11) 99999-9999"
                   value={form.whatsapp}
                   onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
                   className="h-12 rounded-xl"
@@ -226,14 +262,21 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                   aria-invalid={!!errors.whatsapp}
                   aria-describedby={errors.whatsapp ? "whatsapp-error" : undefined}
                 />
-                {errors.whatsapp && <p id="whatsapp-error" className="mt-1 text-xs text-destructive">{errors.whatsapp}</p>}
+                {errors.whatsapp && (
+                  <p id="whatsapp-error" className="mt-1 text-xs text-destructive">
+                    {errors.whatsapp}
+                  </p>
+                )}
               </div>
+
               <div>
-                <label htmlFor="email" className="sr-only">E-mail corporativo</label>
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
+                  E-mail corporativo
+                </label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Seu melhor e-mail (opcional)"
+                  placeholder="voce@empresa.com.br"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="h-12 rounded-xl"
@@ -242,13 +285,20 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? "email-error" : undefined}
                 />
-                {errors.email && <p id="email-error" className="mt-1 text-xs text-destructive">{errors.email}</p>}
+                {errors.email && (
+                  <p id="email-error" className="mt-1 text-xs text-destructive">
+                    {errors.email}
+                  </p>
+                )}
               </div>
+
               <div>
-                <label htmlFor="empresa" className="sr-only">Nome da Empresa</label>
+                <label htmlFor="empresa" className="mb-2 block text-sm font-medium text-foreground">
+                  Empresa
+                </label>
                 <Input
                   id="empresa"
-                  placeholder="Nome da sua empresa"
+                  placeholder="Nome da empresa"
                   value={form.empresa}
                   onChange={(e) => setForm({ ...form, empresa: e.target.value })}
                   className="h-12 rounded-xl"
@@ -257,14 +307,21 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                   aria-invalid={!!errors.empresa}
                   aria-describedby={errors.empresa ? "empresa-error" : undefined}
                 />
-                {errors.empresa && <p id="empresa-error" className="mt-1 text-xs text-destructive">{errors.empresa}</p>}
+                {errors.empresa && (
+                  <p id="empresa-error" className="mt-1 text-xs text-destructive">
+                    {errors.empresa}
+                  </p>
+                )}
               </div>
+
               <div>
-                <label htmlFor="employees" className="sr-only">Quantidade de funcionarios</label>
+                <label htmlFor="employees" className="mb-2 block text-sm font-medium text-foreground">
+                  Quantidade de funcionários
+                </label>
                 <Input
                   id="employees"
                   type="number"
-                  placeholder="Quantidade exata de funcionarios"
+                  placeholder="Ex.: 25"
                   value={form.employees}
                   onChange={(e) => setForm({ ...form, employees: e.target.value })}
                   className="h-12 rounded-xl"
@@ -273,21 +330,29 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                   aria-invalid={!!errors.employees}
                   aria-describedby={errors.employees ? "employees-error" : undefined}
                 />
-                {errors.employees && <p id="employees-error" className="mt-1 text-xs text-destructive">{errors.employees}</p>}
+                {errors.employees && (
+                  <p id="employees-error" className="mt-1 text-xs text-destructive">
+                    {errors.employees}
+                  </p>
+                )}
               </div>
             </div>
-            <Button
-              variant="cta"
-              type="submit"
-              className="mt-6 h-14 w-full rounded-xl text-lg"
-              disabled={isSubmitting || submitted}
-            >
+
+            <Button variant="cta" type="submit" className="mt-6 h-14 w-full rounded-xl text-lg" disabled={isSubmitting || submitted}>
               <Send className={`mr-2 h-5 w-5 ${isSubmitting ? "animate-pulse" : ""}`} />
-              {isSubmitting ? "Enviando..." : "Quero testar agora"}
+              {isSubmitting ? "Enviando..." : "Quero agendar minha demonstração"}
             </Button>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              Seus dados serao usados apenas para contato comercial e demonstracao da plataforma. Nao enviamos spam.
-              Ao enviar, voce concorda com nossos termos.
+
+            <p className="mt-4 text-center text-xs leading-6 text-muted-foreground">
+              Ao enviar, você concorda com nossos{" "}
+              <a href="/termos-de-uso" className="font-medium text-primary underline-offset-4 hover:underline">
+                Termos de Uso
+              </a>{" "}
+              e com a{" "}
+              <a href="/politica-de-privacidade" className="font-medium text-primary underline-offset-4 hover:underline">
+                Política de Privacidade
+              </a>
+              . Seus dados serão usados apenas para contato comercial e apresentação da plataforma.
             </p>
           </form>
         </div>

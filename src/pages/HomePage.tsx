@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
-import Header from "@/components/layout/Header";
-import Hero from "@/components/sections/Hero";
-import Problems from "@/components/sections/Problems";
-import Solution from "@/components/sections/Solution";
-import Benefits from "@/components/sections/Benefits";
-import SocialProof from "@/components/sections/SocialProof";
-import Pricing from "@/components/sections/Pricing";
-import Security from "@/components/sections/Security";
-import LeadForm from "@/components/sections/LeadForm";
-import FinalCTA from "@/components/sections/FinalCTA";
 import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import Benefits from "@/components/sections/Benefits";
+import FaqSection from "@/components/sections/FaqSection";
+import FinalCTA from "@/components/sections/FinalCTA";
+import Hero from "@/components/sections/Hero";
+import LeadForm from "@/components/sections/LeadForm";
+import Pricing from "@/components/sections/Pricing";
+import Problems from "@/components/sections/Problems";
+import Security from "@/components/sections/Security";
+import Solution from "@/components/sections/Solution";
 import SuccessView from "@/components/sections/SuccessView";
+import TrustSection from "@/components/sections/TrustSection";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { trackPageView } from "@/services/analyticsService";
 
 const HomePage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  usePageMeta({
+    title: "Controle de Ponto Eletrônico para Empresas | Teste Grátis",
+    description:
+      "Software de controle de ponto eletrônico para RH, DP e gestores. Reduza retrabalho no fechamento da folha, acompanhe jornadas em tempo real e experimente grátis.",
+    path: "/",
+  });
 
   useEffect(() => {
     void trackPageView({
@@ -26,7 +35,7 @@ const HomePage = () => {
   return (
     <>
       <Header hideCTA={isSubmitted} />
-      <main>
+      <main id="conteudo-principal">
         {isSubmitted ? (
           <SuccessView />
         ) : (
@@ -35,11 +44,12 @@ const HomePage = () => {
             <Problems />
             <Solution />
             <Benefits />
-            <SocialProof />
+            <TrustSection />
             <Pricing />
             <Security />
-            <LeadForm onSuccess={() => setIsSubmitted(true)} />
+            <FaqSection />
             <FinalCTA />
+            <LeadForm onSuccess={() => setIsSubmitted(true)} />
           </>
         )}
       </main>
