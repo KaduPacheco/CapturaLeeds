@@ -1,26 +1,30 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { AlertCircle, FileSpreadsheet, Hourglass, EyeOff } from "lucide-react";
+import { AlertCircle, EyeOff, FileSpreadsheet, Hourglass } from "lucide-react";
 
 const problems = [
   {
     icon: FileSpreadsheet,
-    title: "Planilhas e retrabalho",
-    description: "Seu RH gasta horas preciosas cruzando dados manuais para fechar a folha, um esforço que custa caro.",
+    title: "Fechamento da folha com retrabalho",
+    description:
+      "Quando o controle da jornada depende de conferência manual, o time de RH perde horas conciliando informações e corrigindo inconsistências.",
   },
   {
     icon: AlertCircle,
-    title: "Passivo trabalhista",
-    description: "Controle informal ou em papel abre brechas gigantescas para processos trabalhistas indesejados.",
+    title: "Erros de jornada que viram custo",
+    description:
+      "Ajustes feitos em cima da hora e registros mal acompanhados aumentam o risco de pagamentos indevidos e discussões futuras.",
   },
   {
     icon: Hourglass,
-    title: "Horas extras descontroladas",
-    description: "Falta de precisão no registro gera pagamentos indevidos e afeta diretamente a margem da empresa.",
+    title: "Horas extras sem previsibilidade",
+    description:
+      "Sem uma visão clara da rotina da equipe, o gestor descobre desvios tarde demais e perde margem operacional no mês.",
   },
   {
     icon: EyeOff,
-    title: "Gestores às cegas",
-    description: "Sem visibilidade em tempo real de quem faltou ou atrasou, a operação da empresa é prejudicada.",
+    title: "Falta de visibilidade gerencial",
+    description:
+      "Atrasos, faltas, banco de horas e pendências ficam pulverizados, o que dificulta decisões rápidas no dia a dia da operação.",
   },
 ];
 
@@ -28,27 +32,34 @@ const Problems = () => {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="problemas" className="py-24 bg-muted/30">
+    <section id="problemas" className="bg-muted/30 py-24" aria-labelledby="problems-title">
       <div className="container" ref={ref}>
-        <div className="text-center mb-16 max-w-2xl mx-auto">
-          <span className="text-sm font-bold text-destructive uppercase tracking-widest">A Realidade</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-3 leading-tight">
-            O controle amador está consumindo o <span className="text-destructive">lucro e o tempo</span> da sua empresa
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <span className="text-sm font-bold uppercase tracking-widest text-destructive">Onde a rotina trava</span>
+          <h2 id="problems-title" className="mt-3 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
+            O problema não é só registrar o ponto. É ter confiança no fechamento.
           </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Empresas que ainda operam com controles frágeis costumam pagar a conta em horas perdidas, decisões lentas e mais
+            exposição em rotinas sensíveis do DP.
+          </p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {problems.map((p, i) => (
-            <div
-              key={p.title}
-              className={`bg-card rounded-xl p-8 border border-border hover:border-destructive/30 shadow-sm hover:shadow-md transition-all ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
-              style={{ animationDelay: `${i * 0.1}s` }}
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {problems.map((problem, index) => (
+            <article
+              key={problem.title}
+              className={`rounded-2xl border border-border bg-card p-8 shadow-sm transition-all hover:border-destructive/30 hover:shadow-md ${
+                isVisible ? "animate-fade-in-up" : "opacity-0"
+              }`}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center mb-6">
-                <p.icon className="w-6 h-6 text-destructive" />
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10">
+                <problem.icon className="h-6 w-6 text-destructive" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-3">{p.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{p.description}</p>
-            </div>
+              <h3 className="mb-3 text-lg font-bold text-foreground">{problem.title}</h3>
+              <p className="leading-7 text-muted-foreground">{problem.description}</p>
+            </article>
           ))}
         </div>
       </div>
