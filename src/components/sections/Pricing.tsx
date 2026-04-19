@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { trackCtaClick } from "@/services/analyticsService";
 import { Check, CircleHelp, Clock, Zap } from "lucide-react";
 
 const features = [
@@ -22,7 +23,7 @@ const Pricing = () => {
             Um ponto de partida claro para empresas que estão digitalizando o controle de jornada.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Preço de entrada acessível, demonstração consultiva e teste de 30 dias para validar aderência antes da contratação.
+            Preço de entrada acessível, demonstração consultiva e teste grátis de 14 dias para validar aderência antes da contratação.
           </p>
         </div>
 
@@ -65,7 +66,7 @@ const Pricing = () => {
             <div className="absolute right-0 top-0">
               <div className="flex items-center gap-1.5 rounded-bl-xl bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
                 <Clock className="h-3.5 w-3.5" />
-                Teste grátis de 30 dias
+                Teste grátis de 14 dias
               </div>
             </div>
 
@@ -98,7 +99,7 @@ const Pricing = () => {
               <div className="flex items-start gap-3">
                 <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
                 <p className="text-sm leading-6 text-primary-foreground/88">
-                  O teste de 30 dias permite validar a rotina com mais segurança.
+                  O teste grátis de 14 dias permite validar a rotina com mais segurança.
                 </p>
               </div>
             </div>
@@ -108,7 +109,19 @@ const Pricing = () => {
               className="mt-8 h-14 w-full rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90"
               asChild
             >
-              <a href="#contato">Solicitar demonstração</a>
+              <a
+                href="#contato"
+                onClick={() => {
+                  void trackCtaClick({
+                    cta_id: "pricing_cta_solicitar_demonstracao",
+                    cta_label: "Solicitar demonstração de preço",
+                    placement: "pricing",
+                    target: "#contato",
+                  });
+                }}
+              >
+                Solicitar demonstração
+              </a>
             </Button>
           </div>
         </div>

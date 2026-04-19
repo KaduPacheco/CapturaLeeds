@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { trackCtaClick } from "@/services/analyticsService";
 import { ArrowRight, CheckCircle2, MessageSquareMore, ShieldCheck, Telescope } from "lucide-react";
 
 interface SuccessViewProps {
@@ -47,6 +48,13 @@ const SuccessView = ({ onReviewSolution }: SuccessViewProps) => {
               <a
                 href="/#solucao"
                 onClick={(event) => {
+                  void trackCtaClick({
+                    cta_id: "success_view_cta_revisar_solucao",
+                    cta_label: "Revisar solução",
+                    placement: "success_view",
+                    target: "/#solucao",
+                  });
+
                   if (!onReviewSolution) {
                     return;
                   }

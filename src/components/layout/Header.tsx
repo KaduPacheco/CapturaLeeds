@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { trackCtaClick } from "@/services/analyticsService";
 import { Clock } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -7,18 +8,29 @@ interface HeaderProps {
 }
 
 const navItems = [
-  { label: "Problemas", hash: "#problemas" },
-  { label: "Solução", hash: "#solucao" },
-  { label: "Preços", hash: "#precos" },
-  { label: "FAQ", hash: "#faq" },
-  { label: "Contato", hash: "#contato" },
+  { label: "Problemas", hash: "#problemas", id: "header_nav_problemas" },
+  { label: "Solução", hash: "#solucao", id: "header_nav_solucao" },
+  { label: "Preços", hash: "#precos", id: "header_nav_precos" },
+  { label: "FAQ", hash: "#faq", id: "header_nav_faq" },
+  { label: "Contato", hash: "#contato", id: "header_nav_contato" },
 ] as const;
 
 const Header = ({ hideCTA = false }: HeaderProps) => {
   const location = useLocation();
   const isLanding = location.pathname === "/";
+
   const resolveTarget = (hash: string) => (isLanding ? hash : `/${hash}`);
-  const contactTarget = resolveTarget("#contato");
+
+  const trackHeaderClick = (ctaId: string, ctaLabel: string, target: string) => {
+    void trackCtaClick({
+      cta_id: ctaId,
+      cta_label: ctaLabel,
+      placement: "header",
+      target,
+    });
+  };
+
+  const primaryTarget = resolveTarget("#contato");
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b bg-card/85 backdrop-blur-lg">
@@ -40,16 +52,30 @@ const Header = ({ hideCTA = false }: HeaderProps) => {
         </a>
 
         <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex" aria-label="Navegação principal">
-          {navItems.map((item) => (
-            <a key={item.hash} href={resolveTarget(item.hash)} className="transition-colors hover:text-foreground">
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const target = resolveTarget(item.hash);
+
+            return (
+              <a
+                key={item.id}
+                href={target}
+                className="transition-colors hover:text-foreground"
+                onClick={() => trackHeaderClick(item.id, item.label, target)}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
 
         {!hideCTA ? (
           <Button variant="cta" size="sm" className="w-full px-3 text-sm sm:w-auto sm:px-4 sm:text-base" asChild>
-            <a href={contactTarget}>Solicitar demonstração</a>
+            <a
+              href={primaryTarget}
+              onClick={() => trackHeaderClick("header_cta_solicitar_demonstracao", "Solicitar demonstração", primaryTarget)}
+            >
+              Solicitar demonstração
+            </a>
           </Button>
         ) : null}
       </div>

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/Button";
 import heroMockup from "@/assets/images/hero-mockup.png";
+import { trackCtaClick } from "@/services/analyticsService";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 
 const primaryProofs = [
   "Demonstração consultiva",
-  "Teste de 30 dias após avaliação inicial",
+  "Teste grátis de 14 dias",
   "Implantação assistida",
 ] as const;
 
@@ -52,7 +53,17 @@ const Hero = () => {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <Button variant="hero" size="lg" className="h-14 rounded-xl px-8 text-base font-semibold shadow-xl" asChild>
-                <a href="#contato">
+                <a
+                  href="#contato"
+                  onClick={() => {
+                    void trackCtaClick({
+                      cta_id: "hero_cta_solicitar_demonstracao",
+                      cta_label: "Solicitar demonstração",
+                      placement: "hero",
+                      target: "#contato",
+                    });
+                  }}
+                >
                   Solicitar demonstração
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -64,7 +75,19 @@ const Hero = () => {
                 className="h-14 rounded-xl border-primary-foreground/25 bg-primary-foreground/8 px-8 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/12 hover:text-primary-foreground"
                 asChild
               >
-                <a href="#solucao">Entender como funciona</a>
+                <a
+                  href="#solucao"
+                  onClick={() => {
+                    void trackCtaClick({
+                      cta_id: "hero_cta_entender_como_funciona",
+                      cta_label: "Entender como funciona",
+                      placement: "hero",
+                      target: "#solucao",
+                    });
+                  }}
+                >
+                  Entender como funciona
+                </a>
               </Button>
             </div>
 

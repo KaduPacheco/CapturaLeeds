@@ -2,33 +2,41 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { CheckCircle, CheckCircle2, Send } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
-import { z } from "zod";
+import { leadSchema } from "@/lib/validations";
+import {
+  trackLeadFormStart,
+  trackLeadFormSubmitAttempt,
+  trackLeadFormSubmitError,
+  trackLeadFormSubmitSuccess,
+} from "@/services/analyticsService";
 import { submitLeadToSupabase } from "@/services/leadService";
+import { CheckCircle, CheckCircle2, Send } from "lucide-react";
 
-const leadSchema = z.object({
-  name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  whatsapp: z.string().trim().min(10, "WhatsApp inválido").max(20).regex(/^[\d\s()+-]+$/, "Formato inválido"),
-  email: z.string().trim().email("E-mail inválido").max(255).optional().or(z.literal("")),
-  empresa: z.string().trim().min(2, "Nome da empresa é obrigatório").max(100),
-  employees: z.coerce.number().min(1, "Informe a quantidade de funcionários").int(),
-});
+const FORM_ID = "landing_lead_form";
+const SECTION_ID = "contato";
 
 const trustPoints = [
   "Retorno comercial em até 1 dia útil",
   "Demonstração orientada ao seu cenário",
-  "Teste de 30 dias para avaliar aderência",
+  "Teste grátis de 14 dias",
 ] as const;
 
 const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { ref, isVisible } = useScrollAnimation();
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: "", whatsapp: "", email: "", empresa: "", employees: "", bot_field: "" });
+  const [form, setForm] = useState({
+    name: "",
+    whatsapp: "",
+    email: "",
+    empresa: "",
+    employees: "",
+    bot_field: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const startTime = useState(() => Date.now())[0];
+  const [startTime] = useState(() => Date.now());
   const hasTrackedStartRef = useRef(false);
 
   const handleFormStart = () => {
@@ -37,30 +45,73 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     }
 
     hasTrackedStartRef.current = true;
+    void trackLeadFormStart({
+      form_id: FORM_ID,
+      section_id: SECTION_ID,
+      surface: "landing",
+    });
   };
+
+  const getElapsedMs = () => Date.now() - startTime;
+
+  const getFilledFieldsCount = () =>
+    [form.name, form.whatsapp, form.email, form.empresa, form.employees].filter((value) => value.trim().length > 0).length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    void trackLeadFormSubmitAttempt({
+      form_id: FORM_ID,
+      section_id: SECTION_ID,
+      elapsed_ms: getElapsedMs(),
+      filled_fields_count: getFilledFieldsCount(),
+      has_email: Boolean(form.email.trim()),
+      has_company: Boolean(form.empresa.trim()),
+      has_whatsapp: Boolean(form.whatsapp.trim()),
+      has_employees: Boolean(form.employees.trim()),
+    });
+
     const result = leadSchema.safeParse(form);
 
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
+
       result.error.errors.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as string] = err.message;
         }
       });
+
       setErrors(fieldErrors);
+
+      void trackLeadFormSubmitError({
+        form_id: FORM_ID,
+        section_id: SECTION_ID,
+        error_type: "validation",
+        error_fields: Object.keys(fieldErrors),
+        elapsed_ms: getElapsedMs(),
+      });
+
       return;
     }
 
-    if (form.bot_field || Date.now() - startTime < 3000) {
+    if (form.bot_field || getElapsedMs() < 3000) {
+      void trackLeadFormSubmitError({
+        form_id: FORM_ID,
+        section_id: SECTION_ID,
+        error_type: "anti_spam",
+        blocked_reason: form.bot_field ? "honeypot" : "fast_submit",
+        elapsed_ms: getElapsedMs(),
+      });
+
       toast({ title: "Sua solicitação foi recebida." });
+
       if (onSuccess) {
         onSuccess();
       } else {
         setSubmitted(true);
       }
+
       return;
     }
 
@@ -76,6 +127,13 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         funcionarios: result.data.employees,
       });
 
+      void trackLeadFormSubmitSuccess({
+        form_id: FORM_ID,
+        section_id: SECTION_ID,
+        elapsed_ms: getElapsedMs(),
+        source: "landing_page",
+      });
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -87,9 +145,17 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         description: "Em breve entraremos em contato com você.",
       });
     } catch (error) {
+      void trackLeadFormSubmitError({
+        form_id: FORM_ID,
+        section_id: SECTION_ID,
+        error_type: "transport",
+        error_message: error instanceof Error ? error.message : "unknown_error",
+        elapsed_ms: getElapsedMs(),
+      });
+
       toast({
         title: "Erro ao enviar",
-        description: "Não foi possível enviar seus dados, tente novamente.",
+        description: "Não foi possível enviar seus dados. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -115,10 +181,11 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div className={`text-primary-foreground ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
             <h2 id="lead-form-title" className="mt-4 text-3xl font-extrabold md:text-4xl">
-              Solicite uma demonstração e avalie a plataforma no seu cenário.
+              Solicite uma demonstração e veja se a plataforma faz sentido para a sua operação.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-primary-foreground/84">
-              Preencha os dados para nosso time entender a sua operação e conduzir a próxima etapa comercial com objetividade.
+              Preencha seus dados para nosso time entender o cenário da empresa, apresentar a solução e orientar o próximo passo
+              comercial com mais objetividade.
             </p>
 
             <div className="mt-8 space-y-3">
@@ -151,7 +218,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-foreground">Solicitar demonstração</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Deixe seus dados para receber um contato comercial alinhado ao seu contexto.
+                Campos essenciais para nosso time preparar um contato comercial mais útil para a sua realidade.
               </p>
             </div>
 
@@ -204,7 +271,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
               <div>
                 <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
-                  E-mail profissional
+                  E-mail corporativo
                 </label>
                 <Input
                   id="email"
@@ -277,7 +344,15 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             </Button>
 
             <p className="mt-4 text-center text-xs leading-6 text-muted-foreground">
-              Seus dados serão usados apenas para contato comercial e apresentação da plataforma. Não enviamos spam.
+              Ao enviar, você concorda com nossos{" "}
+              <a href="/termos-de-uso" className="font-medium text-primary underline-offset-4 hover:underline">
+                Termos de Uso
+              </a>{" "}
+              e com a{" "}
+              <a href="/politica-de-privacidade" className="font-medium text-primary underline-offset-4 hover:underline">
+                Política de Privacidade
+              </a>
+              . Seus dados serão usados apenas para contato comercial e apresentação da plataforma.
             </p>
           </form>
         </div>

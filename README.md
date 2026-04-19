@@ -1,8 +1,13 @@
 # Ponto Eletrônico | CapturaLeeds
 
-Landing page de captação de leads para a oferta de controle de ponto eletrônico voltada a pequenas e médias empresas.
+Repositório da landing pública de captação de leads e do workspace de CRM da operação comercial.
 
 ## Visão geral
+
+O aplicativo possui duas superfícies principais:
+
+1. landing pública em `/`
+2. CRM interno em `/crm`
 
 O fluxo principal da página pública está concentrado em `src/pages/HomePage.tsx` e segue esta ordem:
 
@@ -30,7 +35,7 @@ Os componentes abaixo continuam no repositório apenas para referência editoria
 - O `Header` aponta para âncoras ativas da landing: `#problemas`, `#solucao`, `#precos`, `#faq` e `#contato`.
 - O CTA principal do topo aponta para o formulário.
 - O formulário envia leads para o Supabase e replica para o webhook do n8n quando configurado.
-- A comunicação comercial atual mantém os termos `demonstração`, `teste de 30 dias`, `retorno em até 1 dia útil`, `implantação assistida` e `controle da jornada`.
+- A comunicação comercial atual mantém os termos `demonstração`, `teste grátis de 14 dias`, `retorno em até 1 dia útil`, `implantação assistida` e `controle da jornada`.
 
 ## Stack
 

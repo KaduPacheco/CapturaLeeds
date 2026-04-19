@@ -14,7 +14,7 @@ const faqs = [
   {
     question: "Como funciona o teste grátis?",
     answer:
-      "O teste de 30 dias é usado para validar a aderência da plataforma à rotina da empresa após o alinhamento inicial com o time comercial.",
+      "O teste grátis de 14 dias é usado para validar a aderência da plataforma à rotina da empresa após o alinhamento inicial com o time comercial.",
   },
   {
     question: "O sistema ajuda no fechamento da folha?",

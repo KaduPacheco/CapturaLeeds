@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import FaqSection from "@/components/sections/FaqSection";
@@ -9,6 +9,8 @@ import Problems from "@/components/sections/Problems";
 import Solution from "@/components/sections/Solution";
 import SuccessView from "@/components/sections/SuccessView";
 import TrustSection from "@/components/sections/TrustSection";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import { trackPageView } from "@/services/analyticsService";
 
 const HomePage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -35,6 +37,20 @@ const HomePage = () => {
       });
     });
   };
+
+  usePageMeta({
+    title: "Controle de Ponto Eletrônico para Empresas | Teste Grátis",
+    description:
+      "Software de controle de ponto eletrônico para RH, DP e gestores. Reduza retrabalho no fechamento da folha, acompanhe jornadas em tempo real e experimente grátis.",
+    path: "/",
+  });
+
+  useEffect(() => {
+    void trackPageView({
+      page_name: "landing_home",
+      surface: "landing",
+    });
+  }, []);
 
   return (
     <>
