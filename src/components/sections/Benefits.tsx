@@ -1,3 +1,4 @@
+// Preservado fora do fluxo principal da landing para referência editorial e rollback seguro.
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { BarChart2, Clock3, ScanSearch, Users } from "lucide-react";
 
@@ -22,7 +23,7 @@ const benefits = [
     title: "Mais clareza entre RH e lideranças",
     description: "Unifique a leitura da jornada para reduzir ruído entre quem opera, aprova e fecha as informações.",
   },
-];
+] as const;
 
 const Benefits = () => {
   const { ref, isVisible } = useScrollAnimation();

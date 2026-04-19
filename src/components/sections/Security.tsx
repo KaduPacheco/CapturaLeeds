@@ -1,3 +1,4 @@
+// Preservado fora do fluxo principal da landing para referência editorial e rollback seguro.
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { DatabaseBackup, FileSignature, Lock } from "lucide-react";
 
@@ -20,7 +21,7 @@ const pillars = [
     description:
       "Registros, ajustes e dados relevantes podem ser acompanhados com mais contexto, o que fortalece rotinas de auditoria e conferência.",
   },
-];
+] as const;
 
 const Security = () => {
   const { ref, isVisible } = useScrollAnimation();

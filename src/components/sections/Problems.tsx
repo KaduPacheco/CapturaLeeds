@@ -26,7 +26,7 @@ const problems = [
     description:
       "Atrasos, faltas, banco de horas e pendências ficam pulverizados, o que dificulta decisões rápidas no dia a dia da operação.",
   },
-];
+] as const;
 
 const Problems = () => {
   const { ref, isVisible } = useScrollAnimation();

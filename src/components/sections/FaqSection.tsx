@@ -4,34 +4,34 @@ const faqs = [
   {
     question: "Como os funcionários registram o ponto?",
     answer:
-      "Na demonstração, avaliamos a rotina da empresa e apresentamos o fluxo mais adequado para o registro e acompanhamento da jornada.",
+      "O registro pode ser feito pelos canais já suportados pela plataforma, conforme a rotina definida para a empresa. Na implantação, ajustamos o fluxo mais adequado para a operação.",
   },
   {
     question: "Funciona para equipe externa, presencial e home office?",
     answer:
-      "A proposta comercial atende operações presenciais, externas e híbridas, com gestão centralizada para RH, DP e lideranças.",
+      "Sim. A plataforma foi pensada para acompanhar diferentes rotinas de trabalho com gestão centralizada para RH, DP e lideranças.",
   },
   {
     question: "Como funciona o teste grátis?",
     answer:
-      "O teste grátis de 14 dias permite avaliar aderência operacional antes de avançar para uma contratação comercial.",
+      "O teste grátis de 14 dias é usado para validar a aderência da plataforma à rotina da empresa após o alinhamento inicial com o time comercial.",
   },
   {
     question: "O sistema ajuda no fechamento da folha?",
     answer:
-      "Sim. A plataforma foi pensada para organizar informações de jornada, horas extras, banco de horas e pendências com mais clareza no fechamento.",
+      "Sim. A plataforma organiza informações da jornada para reduzir retrabalho, facilitar conferências e apoiar o fechamento com mais clareza.",
   },
   {
     question: "Preciso de relógio de ponto físico?",
     answer:
-      "Nem sempre. O cenário ideal depende da operação, e isso é validado durante a demonstração para evitar uma recomendação genérica.",
+      "Não necessariamente. A avaliação inicial considera a rotina da empresa para definir o fluxo mais adequado dentro do que a plataforma suporta hoje.",
   },
   {
     question: "Como funciona a implantação?",
     answer:
-      "O processo começa com diagnóstico do cenário e orientação inicial para reduzir atrito na adoção e no uso pelos times envolvidos.",
+      "A implantação começa com alinhamento do cenário da empresa e apoio inicial para reduzir atrito no começo do uso.",
   },
-];
+] as const;
 
 const FaqSection = () => {
   const { ref, isVisible } = useScrollAnimation();
@@ -42,10 +42,10 @@ const FaqSection = () => {
         <div className="mx-auto mb-14 max-w-3xl text-center">
           <span className="text-sm font-bold uppercase tracking-widest text-primary">Perguntas frequentes</span>
           <h2 id="faq-title" className="mt-3 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
-            Respostas objetivas para reduzir atrito na decisão.
+            Respostas objetivas para a avaliação inicial da sua operação.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            O FAQ ajuda a esclarecer o que costuma travar a avaliação de uma solução de ponto eletrônico sem prometer além do que faz sentido.
+            Confira os principais pontos sobre uso, implantação, teste e aderência da plataforma antes da demonstração.
           </p>
         </div>
 

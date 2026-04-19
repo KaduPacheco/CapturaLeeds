@@ -18,8 +18,8 @@ const SECTION_ID = "contato";
 
 const trustPoints = [
   "Retorno comercial em até 1 dia útil",
+  "Demonstração orientada ao seu cenário",
   "Teste grátis de 14 dias",
-  "Sem alterar a forma como seus leads já são captados",
 ] as const;
 
 const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
@@ -180,12 +180,12 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       <div className="container" ref={ref}>
         <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div className={`text-primary-foreground ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">Demonstração e teste</span>
             <h2 id="lead-form-title" className="mt-4 text-3xl font-extrabold md:text-4xl">
-              Fale com um especialista e veja se a plataforma faz sentido para a sua operação.
+              Solicite uma demonstração e veja se a plataforma faz sentido para a sua operação.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-primary-foreground/84">
-              Preencha seus dados e nossa equipe comercial retorna para entender o cenário da empresa, apresentar a solução e orientar o melhor próximo passo.
+              Preencha seus dados para nosso time entender o cenário da empresa, apresentar a solução e orientar o próximo passo
+              comercial com mais objetividade.
             </p>
 
             <div className="mt-8 space-y-3">
@@ -340,7 +340,7 @@ const LeadForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
             <Button variant="cta" type="submit" className="mt-6 h-14 w-full rounded-xl text-lg" disabled={isSubmitting || submitted}>
               <Send className={`mr-2 h-5 w-5 ${isSubmitting ? "animate-pulse" : ""}`} />
-              {isSubmitting ? "Enviando..." : "Quero agendar minha demonstração"}
+              {isSubmitting ? "Enviando..." : "Solicitar demonstração"}
             </Button>
 
             <p className="mt-4 text-center text-xs leading-6 text-muted-foreground">

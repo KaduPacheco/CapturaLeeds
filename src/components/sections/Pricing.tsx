@@ -9,7 +9,7 @@ const features = [
   "Controle de horas extras e banco de horas",
   "Acesso por celular ou computador",
   "Suporte humano para os primeiros passos",
-];
+] as const;
 
 const Pricing = () => {
   const { ref, isVisible } = useScrollAnimation();
@@ -23,8 +23,7 @@ const Pricing = () => {
             Um ponto de partida claro para empresas que estão digitalizando o controle de jornada.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Mantivemos a oferta objetiva: valor base acessível, teste grátis e crescimento conforme o tamanho da equipe, sem
-            linguagem promocional vaga.
+            Preço de entrada acessível, demonstração consultiva e teste grátis de 14 dias para validar aderência antes da contratação.
           </p>
         </div>
 
@@ -72,9 +71,9 @@ const Pricing = () => {
             </div>
 
             <div className="mb-8 pt-6">
-              <h3 className="text-2xl font-bold">O que essa faixa de preço resolve</h3>
+              <h3 className="text-2xl font-bold">Por que começar por este plano</h3>
               <p className="mt-3 text-primary-foreground/82">
-                Dá previsibilidade para começar, sem amarrar a operação a uma decisão longa antes de validar aderência no dia a dia.
+                Um ponto de entrada claro para validar a operação sem adicionar complexidade logo no início.
               </p>
             </div>
 
@@ -82,19 +81,25 @@ const Pricing = () => {
               <div className="flex items-start gap-3">
                 <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
                 <p className="text-sm leading-6 text-primary-foreground/88">
-                  A cobrança cresce conforme o número de funcionários, o que facilita o encaixe para empresas em expansão.
+                  Valor inicial acessível para validar a operação.
                 </p>
               </div>
               <div className="flex items-start gap-3">
                 <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
                 <p className="text-sm leading-6 text-primary-foreground/88">
-                  O teste grátis ajuda a avaliar a rotina antes de avançar com uma contratação comercial.
+                  A cobrança acompanha o crescimento da equipe.
                 </p>
               </div>
               <div className="flex items-start gap-3">
                 <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
                 <p className="text-sm leading-6 text-primary-foreground/88">
-                  Na demonstração, o time comercial valida o cenário da empresa e orienta o melhor próximo passo.
+                  A demonstração ajuda a avaliar o cenário antes do teste.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                <p className="text-sm leading-6 text-primary-foreground/88">
+                  O teste grátis de 14 dias permite validar a rotina com mais segurança.
                 </p>
               </div>
             </div>

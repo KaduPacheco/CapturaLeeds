@@ -4,10 +4,10 @@ import { trackCtaClick } from "@/services/analyticsService";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 
 const primaryProofs = [
+  "Demonstração consultiva",
   "Teste grátis de 14 dias",
   "Implantação assistida",
-  "Fluxo pensado para RH, DP e gestores",
-];
+] as const;
 
 const Hero = () => {
   return (
@@ -76,17 +76,17 @@ const Hero = () => {
                 asChild
               >
                 <a
-                  href="#contato"
+                  href="#solucao"
                   onClick={() => {
                     void trackCtaClick({
-                      cta_id: "hero_cta_teste_gratis",
-                      cta_label: "Quero testar grátis",
+                      cta_id: "hero_cta_entender_como_funciona",
+                      cta_label: "Entender como funciona",
                       placement: "hero",
-                      target: "#contato",
+                      target: "#solucao",
                     });
                   }}
                 >
-                  Quero testar grátis
+                  Entender como funciona
                 </a>
               </Button>
             </div>

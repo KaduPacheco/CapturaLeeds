@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 const navItems = [
-  { label: "Desafios", hash: "#problemas", id: "header_nav_problemas" },
+  { label: "Problemas", hash: "#problemas", id: "header_nav_problemas" },
   { label: "Solução", hash: "#solucao", id: "header_nav_solucao" },
   { label: "Preços", hash: "#precos", id: "header_nav_precos" },
   { label: "FAQ", hash: "#faq", id: "header_nav_faq" },
@@ -40,14 +40,14 @@ const Header = ({ hideCTA = false }: HeaderProps) => {
       >
         Pular para o conteúdo
       </a>
-      <div className="container flex min-h-[4.5rem] items-center justify-between gap-4 py-3">
-        <a href="/" className="flex items-center gap-3" aria-label="Página inicial da Ponto Eletrônico">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-hero-gradient shadow-lg shadow-primary/20">
+      <div className="container flex min-h-[4.5rem] flex-wrap items-center justify-between gap-2 py-3 md:flex-nowrap md:gap-4">
+        <a href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Página inicial da Ponto Eletrônico">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-hero-gradient shadow-lg shadow-primary/20 sm:h-10 sm:w-10">
             <Clock className="h-5 w-5 text-primary-foreground" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none text-foreground">Ponto Eletrônico</span>
-            <span className="hidden text-xs text-muted-foreground sm:block">Controle de jornada para empresas</span>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-base font-bold leading-none text-foreground sm:text-lg">Ponto Eletrônico</span>
+            <span className="hidden text-xs text-muted-foreground md:block">Controle de jornada para empresas</span>
           </div>
         </a>
 
@@ -69,7 +69,7 @@ const Header = ({ hideCTA = false }: HeaderProps) => {
         </nav>
 
         {!hideCTA ? (
-          <Button variant="cta" size="sm" asChild>
+          <Button variant="cta" size="sm" className="w-full px-3 text-sm sm:w-auto sm:px-4 sm:text-base" asChild>
             <a
               href={primaryTarget}
               onClick={() => trackHeaderClick("header_cta_solicitar_demonstracao", "Solicitar demonstração", primaryTarget)}

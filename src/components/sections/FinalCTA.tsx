@@ -1,3 +1,4 @@
+// Preservado fora do fluxo principal da landing para referência editorial e rollback seguro.
 import { Button } from "@/components/ui/Button";
 import { trackCtaClick } from "@/services/analyticsService";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
