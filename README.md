@@ -1,132 +1,75 @@
-# ⏰ Ponto Eletrônico — Landing Page
+# Ponto Eletrônico | CapturaLeeds
 
-Landing page de captação de leads para sistema de ponto eletrônico corporativo voltado a PMEs.
+Landing page de captação de leads para a oferta de controle de ponto eletrônico voltada a pequenas e médias empresas.
 
-## 🛠️ Stack Tecnológica
+## Visão geral
 
-| Tecnologia | Uso |
-|---|---|
-| **React 18** | Biblioteca de UI |
-| **TypeScript** | Tipagem estática |
-| **Vite** | Bundler e dev server |
-| **Tailwind CSS 3** | Estilização utility-first |
-| **shadcn/ui** | Componentes UI (Radix + CVA) |
-| **Zod** | Validação de formulários |
-| **React Router** | Roteamento SPA |
-| **React Query** | Gerenciamento de estado async |
-| **Lucide React** | Ícones |
+O fluxo principal da página pública está concentrado em `src/pages/HomePage.tsx` e segue esta ordem:
 
-## 📁 Estrutura do Projeto
+1. `Hero`
+2. `Problems`
+3. `Solution`
+4. `TrustSection`
+5. `Pricing`
+6. `FaqSection`
+7. `LeadForm`
 
-```
-src/
-├── main.tsx                      # Entry point da aplicação
-├── App.tsx                       # Root component (providers + rotas)
-│
-├── assets/
-│   └── images/                   # Imagens estáticas (logo, mockups)
-│
-├── components/
-│   ├── layout/                   # Componentes estruturais
-│   │   ├── Header.tsx            # Navbar fixa
-│   │   └── Footer.tsx            # Rodapé
-│   ├── sections/                 # Seções da landing page
-│   │   ├── Hero.tsx              # Banner principal
-│   │   ├── Problems.tsx          # Problemas do público-alvo
-│   │   ├── Solution.tsx          # Funcionalidades do sistema
-│   │   ├── Benefits.tsx          # Benefícios para o cliente
-│   │   ├── SocialProof.tsx       # Depoimentos e métricas
-│   │   ├── Pricing.tsx           # Tabela de preços
-│   │   ├── Security.tsx          # Segurança e conformidade
-│   │   ├── LeadForm.tsx          # Formulário de captação
-│   │   └── FinalCTA.tsx          # Call-to-action final
-│   └── ui/                       # Componentes primitivos (shadcn/ui)
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       ├── Toast.tsx
-│       ├── Toaster.tsx
-│       └── Tooltip.tsx
-│
-├── hooks/
-│   ├── useToast.ts               # Sistema de notificações toast
-│   └── useScrollAnimation.ts     # Animação on-scroll (IntersectionObserver)
-│
-├── services/
-│   └── leadService.ts            # Integração com Supabase e webhook n8n
-│
-├── styles/
-│   └── globals.css               # Design tokens, variáveis CSS e animações
-│
-├── utils/
-│   └── cn.ts                     # Utilitário de merge de classes (clsx + twMerge)
-│
-└── pages/
-    ├── HomePage.tsx               # Página principal (monta todas as seções)
-    └── NotFoundPage.tsx           # Página 404
-```
+Após o envio do formulário, a Home substitui esse fluxo por `SuccessView`. O CTA `Revisar a solução` fecha a tela de sucesso e faz scroll suave para `#solucao`, com fallback para o topo caso a âncora não esteja disponível.
 
-## 🚀 Desenvolvimento
+## Seções preservadas fora do fluxo principal
 
-### Pré-requisitos
+Os componentes abaixo continuam no repositório apenas para referência editorial e rollback seguro. Eles não são renderizados pela Home atual:
 
-- Node.js >= 18
-- npm, yarn ou bun
+- `src/components/sections/Benefits.tsx`
+- `src/components/sections/Security.tsx`
+- `src/components/sections/FinalCTA.tsx`
+- `src/components/sections/SocialProof.tsx`
 
-### Instalação
+## Navegação e fluxo comercial
+
+- O `Header` aponta para âncoras ativas da landing: `#problemas`, `#solucao`, `#precos`, `#faq` e `#contato`.
+- O CTA principal do topo aponta para o formulário.
+- O formulário envia leads para o Supabase e replica para o webhook do n8n quando configurado.
+- A comunicação comercial atual mantém os termos `demonstração`, `teste de 30 dias`, `retorno em até 1 dia útil`, `implantação assistida` e `controle da jornada`.
+
+## Stack
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- React Router
+- React Query
+- Zod
+- Lucide React
+
+## Scripts
 
 ```bash
-# Clonar repositório
-git clone https://github.com/KaduPacheco/CapturaLeeds.git
-cd CapturaLeeds
-
-# Instalar dependências
 npm install
-```
-
-### Executar em desenvolvimento
-
-```bash
 npm run dev
-```
-
-O servidor inicia em `http://localhost:8080`.
-
-### Build de produção
-
-```bash
 npm run build
 npm run preview
-```
-
-### Linting
-
-```bash
 npm run lint
 ```
 
-## 🔌 Integrações
+O servidor de desenvolvimento sobe via Vite. O build de produção usa `vite build`.
+
+## Integrações
 
 ### Supabase
-O formulário de leads envia dados para uma tabela `leads` no Supabase via REST API (sem SDK).
 
-### n8n Webhook
-Após salvar no Supabase, os dados são replicados para um webhook n8n para automações (notificações, CRM, etc.). Falhas no webhook não bloqueiam o fluxo principal.
+O formulário utiliza `src/services/leadService.ts` para enviar dados para a tabela `leads` via REST API.
 
-## 📋 Melhorias Futuras
+### n8n
 
-| Melhoria | Descrição |
-|---|---|
-| **Testes unitários** | Adicionar testes com Vitest para componentes e serviços |
-| **Testes E2E** | Cypress ou Playwright para validar fluxo de conversão |
-| **Variáveis de ambiente** | Mover `SUPABASE_URL` e `SUPABASE_ANON_KEY` para `.env` |
-| **SEO avançado** | Adicionar `<link rel="icon">` no `<head>`, structured data (JSON-LD) |
-| **Acessibilidade** | Melhorar labels ARIA, focus management, skip links |
-| **Internacionalização** | Preparar para i18n caso escale para outros idiomas |
-| **Analytics** | Integrar Google Analytics / Plausible para métricas de conversão |
-| **Performance** | Lazy loading de seções abaixo do fold, otimização de imagens (WebP) |
-| **CI/CD** | GitHub Actions para lint, build e deploy automático |
-| **Dark mode** | Ativar toggle de tema (variáveis CSS já preparadas) |
+Se `VITE_N8N_WEBHOOK_URL` estiver configurada, o lead também é encaminhado para o webhook. Falhas nessa etapa não interrompem o envio principal.
 
-## 📄 Licença
+## Deploy
 
-Projeto privado — todos os direitos reservados.
+Este repositório é usado com deploy no Vercel. A publicação depende da branch configurada no projeto Vercel. Preview e produção devem ser validados no fluxo do próprio repositório antes de mergear mudanças.
+
+## Licença
+
+Projeto privado.

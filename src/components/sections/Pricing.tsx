@@ -1,83 +1,115 @@
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Button } from "@/components/ui/Button";
-import { Check, Clock, Zap } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { Check, CircleHelp, Clock, Zap } from "lucide-react";
 
 const features = [
   "Registro de ponto digital",
-  "Relatórios automáticos",
-  "Controle de horas extras",
-  "Banco de horas",
-  "App mobile",
-  "Suporte humanizado",
-  "Acesso via celular ou PC",
-];
+  "Relatórios de jornada e fechamento",
+  "Controle de horas extras e banco de horas",
+  "Acesso por celular ou computador",
+  "Suporte humano para os primeiros passos",
+] as const;
 
 const Pricing = () => {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="precos" className="py-20 bg-section-alt">
+    <section id="precos" className="bg-section-alt py-24" aria-labelledby="pricing-title">
       <div className="container" ref={ref}>
-        <div className="text-center mb-14">
-          <span className="text-sm font-semibold text-primary uppercase tracking-wider">Preço especial</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-2">
-            Pode custar menos do que{" "}
-            <span className="text-secondary">um único erro</span>
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-primary">Plano de entrada</span>
+          <h2 id="pricing-title" className="mt-2 text-3xl font-extrabold text-foreground md:text-4xl">
+            Um ponto de partida claro para empresas que estão digitalizando o controle de jornada.
           </h2>
-          <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-            Processos trabalhistas podem gerar custos não previstos. Nosso sistema ajuda a mitigar esses riscos por um preço acessível.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Preço de entrada acessível, demonstração consultiva e teste de 30 dias para validar aderência antes da contratação.
           </p>
         </div>
 
-        <div className="max-w-lg mx-auto">
+        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2rem] border border-border bg-card p-8 shadow-sm md:p-10">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+              <Zap className="h-4 w-4" />
+              Ideal para empresas iniciando a digitalização do ponto
+            </div>
+
+            <h3 className="text-2xl font-bold text-foreground md:text-3xl">Plano Completo</h3>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              Para empresas que precisam organizar jornada, ganhar visibilidade operacional e reduzir retrabalho no fechamento da folha.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-end gap-3">
+              <span className="text-5xl font-extrabold text-foreground">R$ 59,90</span>
+              <span className="pb-1 text-lg text-muted-foreground">/mês para até 5 funcionários</span>
+            </div>
+
+            <p className="mt-3 inline-flex rounded-xl bg-muted px-4 py-2 text-sm font-medium text-foreground">
+              + R$ 7,00 por funcionário adicional
+            </p>
+
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           <div
-            className={`relative rounded-2xl bg-hero-gradient text-primary-foreground shadow-2xl overflow-hidden ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
+            className={`relative overflow-hidden rounded-[2rem] bg-hero-gradient p-10 text-primary-foreground shadow-2xl ${
+              isVisible ? "animate-fade-in-up" : "opacity-0"
+            }`}
           >
-            {/* Badge especial */}
-            <div className="absolute top-0 right-0">
-              <div className="bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-bl-xl flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                Condição especial
+            <div className="absolute right-0 top-0">
+              <div className="flex items-center gap-1.5 rounded-bl-xl bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                Teste grátis de 30 dias
               </div>
             </div>
 
-            <div className="p-10 pt-14">
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-5 h-5 text-secondary" />
-                <h3 className="text-xl font-bold">Plano Completo</h3>
-              </div>
-              <p className="text-sm opacity-80 mb-6">Tudo que você precisa para controlar a jornada da sua equipe</p>
-
-              <div className="mb-2">
-                <span className="text-5xl font-extrabold">R$59,90</span>
-                <span className="text-lg opacity-70">/mês</span>
-              </div>
-              <p className="text-sm opacity-80 mb-2">Para até 5 funcionários</p>
-              <p className="text-sm opacity-90 font-semibold mb-8 bg-primary-foreground/10 inline-block px-3 py-1 rounded-lg">
-                + R$7,00 por funcionário adicional
-              </p>
-
-              <ul className="space-y-3 mb-8">
-                {features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 shrink-0 text-secondary" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                variant="hero"
-                className="w-full h-14 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                asChild
-              >
-                <a href="#contato">Aproveitar condição especial</a>
-              </Button>
-
-              <p className="text-center text-xs opacity-70 mt-4">
-                ⚡ Teste grátis por 30 dias. Planos flexíveis conforme sua necessidade.
+            <div className="mb-8 pt-6">
+              <h3 className="text-2xl font-bold">Por que começar por este plano</h3>
+              <p className="mt-3 text-primary-foreground/82">
+                Um ponto de entrada claro para validar a operação sem adicionar complexidade logo no início.
               </p>
             </div>
+
+            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/10 p-5">
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                <p className="text-sm leading-6 text-primary-foreground/88">
+                  Valor inicial acessível para validar a operação.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                <p className="text-sm leading-6 text-primary-foreground/88">
+                  A cobrança acompanha o crescimento da equipe.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                <p className="text-sm leading-6 text-primary-foreground/88">
+                  A demonstração ajuda a avaliar o cenário antes do teste.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                <p className="text-sm leading-6 text-primary-foreground/88">
+                  O teste de 30 dias permite validar a rotina com mais segurança.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="hero"
+              className="mt-8 h-14 w-full rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              asChild
+            >
+              <a href="#contato">Solicitar demonstração</a>
+            </Button>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
+// Preservado fora do fluxo principal da landing para referência editorial e rollback seguro.
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { Lock, FileSignature, DatabaseBackup } from "lucide-react";
+import { DatabaseBackup, FileSignature, Lock } from "lucide-react";
 
 const pillars = [
   {
@@ -10,39 +11,41 @@ const pillars = [
   {
     icon: Lock,
     title: "Arquitetura Segura",
-    description: "Criptografia de dados e hospedagem em servidores de alta disponibilidade (AWS). Mais segurança para seus dados.",
+    description: "Criptografia de dados e hospedagem em servidores de alta disponibilidade. Mais segurança para seus dados.",
   },
   {
     icon: DatabaseBackup,
     title: "Auditoria e Rastreabilidade",
     description: "Logs de auditoria para ajustes manuais. Backups automáticos diários ajudam a prevenir perdas de dados.",
   },
-];
+] as const;
 
 const Security = () => {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="bg-muted/30 py-24">
       <div className="container" ref={ref}>
-        <div className="text-center mb-16 max-w-2xl mx-auto">
-          <span className="text-sm font-bold text-primary uppercase tracking-widest">Segurança & Legalidade</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mt-3 leading-tight">
+        <div className="mx-auto mb-16 max-w-2xl text-center">
+          <span className="text-sm font-bold uppercase tracking-widest text-primary">Segurança e legalidade</span>
+          <h2 className="mt-3 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
             Infraestrutura robusta para o seu <span className="text-primary">departamento pessoal</span>
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {pillars.map((p, i) => (
+        <div className="grid gap-8 md:grid-cols-3">
+          {pillars.map((pillar, index) => (
             <div
-              key={p.title}
-              className={`p-8 rounded-2xl border bg-card hover:shadow-md transition-shadow ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
-              style={{ animationDelay: `${i * 0.15}s` }}
+              key={pillar.title}
+              className={`rounded-2xl border bg-card p-8 transition-shadow hover:shadow-md ${
+                isVisible ? "animate-fade-in-up" : "opacity-0"
+              }`}
+              style={{ animationDelay: `${index * 0.15}s` }}
             >
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                <p.icon className="w-8 h-8 text-primary" />
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
+                <pillar.icon className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">{p.title}</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm">{p.description}</p>
+              <h3 className="mb-3 text-xl font-bold text-foreground">{pillar.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{pillar.description}</p>
             </div>
           ))}
         </div>

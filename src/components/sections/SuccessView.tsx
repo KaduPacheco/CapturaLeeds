@@ -1,84 +1,76 @@
-import { CheckCircle2, ShieldCheck, PhoneCall, Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ArrowRight, CheckCircle2, MessageSquareMore, ShieldCheck, Telescope } from "lucide-react";
 
-const SuccessView = () => {
+interface SuccessViewProps {
+  onReviewSolution?: () => void;
+}
+
+const nextSteps = [
+  {
+    icon: MessageSquareMore,
+    title: "Contato inicial",
+    description: "Retorno em até 1 dia útil para confirmar contexto e prioridade.",
+  },
+  {
+    icon: Telescope,
+    title: "Diagnóstico rápido",
+    description: "Entendimento da rotina atual e dos pontos críticos do fechamento.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Demonstração orientada",
+    description: "Apresentação focada na aderência da plataforma ao seu cenário.",
+  },
+] as const;
+
+const SuccessView = ({ onReviewSolution }: SuccessViewProps) => {
   return (
     <div className="animate-fade-in-up">
-      {/* Hero / Status OK */}
-      <section className="py-24 bg-hero-gradient text-primary-foreground text-center">
-        <div className="container max-w-3xl mx-auto">
-          <CheckCircle2 className="w-20 h-20 mx-auto mb-8 text-secondary" />
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
-            Solicitação enviada com sucesso.
-          </h1>
-          <p className="text-lg md:text-xl opacity-90 mb-10 leading-relaxed font-medium">
-            Entendemos que seu tempo é valioso. Um de nossos especialistas em gestão de RH entrará em contato em até 24 horas úteis para alinhar as necessidades da sua operação e preparar uma demonstração personalizada.
+      <section className="bg-hero-gradient py-24 text-center text-primary-foreground">
+        <div className="container mx-auto max-w-3xl">
+          <CheckCircle2 className="mx-auto mb-8 h-20 w-20 text-secondary" />
+          <h1 className="mb-6 text-4xl font-extrabold tracking-tight md:text-5xl">Solicitação enviada com sucesso.</h1>
+          <p className="mb-10 text-lg font-medium leading-8 opacity-90 md:text-xl">
+            Recebemos seus dados. Agora seguimos para um contato comercial objetivo, voltado à rotina da sua empresa.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Button size="lg" variant="cta" className="h-14 px-8 rounded-xl text-lg w-full sm:w-auto shadow-xl" asChild>
-              <a href="#features" onClick={(e) => {
-                e.preventDefault();
-                window.location.href = '/';
-              }}>
-                Explorar funcionalidades
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </a>
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl text-lg w-full sm:w-auto bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" asChild>
-              <a href="/">
-                Voltar à página inicial
-              </a>
-            </Button>
-          </div>
-          <p className="text-sm opacity-70 mt-6 mt-8">
-            Fique de olho no seu e-mail e WhatsApp.
-          </p>
-        </div>
-      </section>
-
-      {/* Credibility Section */}
-      <section className="py-24 bg-background">
-        <div className="container max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
-              O que esperar da nossa parceria
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Conheça os pilares que garantem uma transição estruturada e risco zero para o seu Departamento Pessoal.
+          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-left shadow-xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-primary-foreground/70">O que esperar agora</p>
+            <p className="mt-3 text-base leading-7 text-primary-foreground/92">
+              Retorno em até <strong>1 dia útil</strong>, normalmente por WhatsApp ou e-mail, para combinar a melhor forma de
+              apresentar a solução para o seu contexto.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                <Rocket className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Diagnóstico Especializado</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Nossa primeira etapa é mapear a fundo as regras de negócio, acordos e exigências sindicais exclusivas da sua operação.
-              </p>
-            </div>
+          <div className="mt-8 flex justify-center">
+            <Button size="lg" variant="cta" className="h-14 rounded-xl px-8 text-lg shadow-xl" asChild>
+              <a
+                href="/#solucao"
+                onClick={(event) => {
+                  if (!onReviewSolution) {
+                    return;
+                  }
 
-            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                <ShieldCheck className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Setup Estruturado</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Configuramos o novo ambiente do zero com as regras da sua operação. Preparamos a plataforma para que você inicie o próximo fechamento de folha com total segurança.
-              </p>
-            </div>
+                  event.preventDefault();
+                  onReviewSolution();
+                }}
+              >
+                Revisar a solução
+                <ArrowRight className="h-5 w-5" />
+              </a>
+            </Button>
+          </div>
 
-            <div className="bg-card border border-border rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                <PhoneCall className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-foreground">Treinamento Lado a Lado</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Sua equipe não opera o software sozinha. Oferecemos capacitação guiada para que seu time assuma o controle da tecnologia desde o dia 1.
-              </p>
-            </div>
+          <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
+            {nextSteps.map((step) => (
+              <article key={step.title} className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+                  <step.icon className="h-5 w-5 text-secondary" />
+                </div>
+                <h2 className="mb-2 text-lg font-bold text-primary-foreground">{step.title}</h2>
+                <p className="leading-6 text-primary-foreground/82">{step.description}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>

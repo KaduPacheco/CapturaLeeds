@@ -1,37 +1,56 @@
 import { useState } from "react";
+import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import FaqSection from "@/components/sections/FaqSection";
 import Hero from "@/components/sections/Hero";
+import LeadForm from "@/components/sections/LeadForm";
+import Pricing from "@/components/sections/Pricing";
 import Problems from "@/components/sections/Problems";
 import Solution from "@/components/sections/Solution";
-import Benefits from "@/components/sections/Benefits";
-import SocialProof from "@/components/sections/SocialProof";
-import Pricing from "@/components/sections/Pricing";
-import Security from "@/components/sections/Security";
-import LeadForm from "@/components/sections/LeadForm";
-import FinalCTA from "@/components/sections/FinalCTA";
-import Footer from "@/components/layout/Footer";
 import SuccessView from "@/components/sections/SuccessView";
+import TrustSection from "@/components/sections/TrustSection";
 
 const HomePage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const handleReviewSolution = () => {
+    setIsSubmitted(false);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const solutionSection = document.getElementById("solucao");
+
+        if (solutionSection) {
+          window.history.replaceState(null, "", "#solucao");
+          solutionSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+  };
+
   return (
     <>
       <Header hideCTA={isSubmitted} />
-      <main>
+      <main id="conteudo-principal">
         {isSubmitted ? (
-          <SuccessView />
+          <SuccessView onReviewSolution={handleReviewSolution} />
         ) : (
           <>
             <Hero />
             <Problems />
             <Solution />
-            <Benefits />
-            <SocialProof />
+            <TrustSection />
             <Pricing />
-            <Security />
+            <FaqSection />
             <LeadForm onSuccess={() => setIsSubmitted(true)} />
-            <FinalCTA />
           </>
         )}
       </main>
